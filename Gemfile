@@ -47,3 +47,9 @@ end
 
 # --- gdz additions ---
 gem 'therubyracer', platforms: :ruby
+gem 'hydra', '9.1.0'
+gem 'hydra-works', '0.7.0'    
+
+
+
+
