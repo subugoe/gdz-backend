@@ -5,21 +5,23 @@ class CatalogController < ApplicationController
 
   include Hydra::Catalog
   # These before_filters apply the hydra access controls
-  before_filter :enforce_show_permissions, only: :show
+  #before_filter :enforce_show_permissions, only: :show
 
   # This applies appropriate access controls to all solr queries
-  Hydra::SearchBuilder.default_processor_chain += [:add_access_controls_to_solr_params]
+  Hydra::SearchBuilder.default_processor_chain -= [:add_access_controls_to_solr_params]
 
 
   configure_blacklight do |config|
-    config.search_builder_class = Hydra::SearchBuilder
-    config.default_solr_params = {
-      qt: 'search',
-      rows: 10
+    config.search_builder_class     = Hydra::SearchBuilder
+    config.default_solr_params      = {
+        :qf => 'title_tesim author_tesim abstract_tesim',
+        :fq   => '-has_model_ssim:"ActiveFedora::IndirectContainer"-has_model_ssim:"ActiveFedora::Aggregation::Proxy"',
+        qt:   'search',
+        rows: 10
     }
 
     # solr field configuration for search results/index views
-    config.index.title_field = 'title_tesim'
+    config.index.title_field        = 'title_tesim'
     config.index.display_type_field = 'has_model_ssim'
 
 
@@ -87,6 +89,8 @@ class CatalogController < ApplicationController
     config.add_show_field solr_name('lc_callnum', :stored_searchable, type: :string), label: 'Call number:'
     config.add_show_field solr_name('isbn', :stored_searchable, type: :string), label: 'ISBN:'
 
+    config.add_show_field solr_name('abstract', :stored_searchable, type: :string), :label => 'Abstract'
+
     # "fielded" search configuration. Used by pulldown among other places.
     # For supported keys in hash, see rdoc for Blacklight::SearchFields
     #
@@ -118,15 +122,15 @@ class CatalogController < ApplicationController
       # Solr parameter de-referencing like $title_qf.
       # See: http://wiki.apache.org/solr/LocalParams
       field.solr_local_parameters = {
-        qf: '$title_qf',
-        pf: '$title_pf'
+          qf: '$title_qf',
+          pf: '$title_pf'
       }
     end
 
     config.add_search_field('author') do |field|
       field.solr_local_parameters = {
-        qf: '$author_qf',
-        pf: '$author_pf'
+          qf: '$author_qf',
+          pf: '$author_pf'
       }
     end
 
@@ -134,10 +138,10 @@ class CatalogController < ApplicationController
     # tests can test it. In this case it's the same as
     # config[:default_solr_parameters][:qt], so isn't actually neccesary.
     config.add_search_field('subject') do |field|
-      field.qt = 'search'
+      field.qt                    = 'search'
       field.solr_local_parameters = {
-        qf: '$subject_qf',
-        pf: '$subject_pf'
+          qf: '$subject_qf',
+          pf: '$subject_pf'
       }
     end
 
@@ -154,7 +158,6 @@ class CatalogController < ApplicationController
     # mean") suggestion is offered.
     config.spell_max = 5
   end
-
 
 
 end

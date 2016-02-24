@@ -2,10 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bd11dc6b-4d09-4c99-9b4d-ea9881eb657b" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/models/bibliographic_file_set.rb" afterPath="$PROJECT_DIR$/app/models/bibliographic_file_set.rb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/models/bibliographic_work.rb" afterPath="$PROJECT_DIR$/app/models/bibliographic_work.rb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/models/collection.rb" afterPath="$PROJECT_DIR$/app/models/collection.rb" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/controllers/catalog_controller.rb" afterPath="$PROJECT_DIR$/app/controllers/catalog_controller.rb" />
     </list>
     <ignored path="hydra-works-demo.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -43,11 +40,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="bibliographic_file_set.rb" pinned="false" current-in-tab="true">
+      <file leaf-file-name="bibliographic_file_set.rb" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/models/bibliographic_file_set.rb">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.18237083">
+            <state vertical-scroll-proportion="0.0">
               <caret line="4" column="5" selection-start-line="4" selection-start-column="5" selection-end-line="4" selection-end-column="5" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="catalog_controller.rb" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/app/controllers/catalog_controller.rb">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.6666667">
+              <caret line="91" column="4" selection-start-line="91" selection-start-column="4" selection-end-line="91" selection-end-column="4" />
               <folding />
             </state>
           </provider>
@@ -84,6 +91,7 @@
         <option value="$PROJECT_DIR$/app/models/collection.rb" />
         <option value="$PROJECT_DIR$/app/models/bibliographic_work.rb" />
         <option value="$PROJECT_DIR$/app/models/bibliographic_file_set.rb" />
+        <option value="$PROJECT_DIR$/app/controllers/catalog_controller.rb" />
       </list>
     </option>
   </component>
@@ -95,9 +103,9 @@
   <component name="PhpWorkspaceProjectConfiguration" backward_compatibility_performed="true" interpreter_name="PHP 5.5" />
   <component name="ProjectFrameBounds">
     <option name="x" value="159" />
-    <option name="y" value="290" />
+    <option name="y" value="385" />
     <option name="width" value="1114" />
-    <option name="height" value="470" />
+    <option name="height" value="375" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -913,15 +921,15 @@
       <updated>1456309421962</updated>
       <workItem from="1456309428307" duration="240000" />
       <workItem from="1456310482631" duration="1398000" />
-      <workItem from="1456320727028" duration="2377000" />
+      <workItem from="1456320727028" duration="3344000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="4015000" />
+    <option name="totallyTimeSpent" value="4982000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="159" y="290" width="1114" height="470" extended-state="0" />
+    <frame x="159" y="385" width="1114" height="375" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -1212,8 +1220,16 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app/models/bibliographic_file_set.rb">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.18237083">
+        <state vertical-scroll-proportion="0.0">
           <caret line="4" column="5" selection-start-line="4" selection-start-column="5" selection-end-line="4" selection-end-column="5" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/controllers/catalog_controller.rb">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.6666667">
+          <caret line="91" column="4" selection-start-line="91" selection-start-column="4" selection-end-line="91" selection-end-column="4" />
           <folding />
         </state>
       </provider>
