@@ -69,3 +69,7 @@ end
 group :development, :test do
   gem 'rspec-rails'
 end
+
+
+# --- gdz additions ---
+#gem 'rdf-vocab', '~> 0.8.7.1'
