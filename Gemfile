@@ -72,4 +72,5 @@ end
 
 
 # --- gdz additions ---
-#gem 'rdf-vocab', '~> 0.8.7.1'
+gem 'rdf-vocab'
+gem 'oai'
