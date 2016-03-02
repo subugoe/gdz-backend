@@ -20,5 +20,7 @@
 
 # --- gdz additions ---
 /fcrepo4-data
-/.idea
-
+.idea/**
+.DS_Store
+tmp_data/**
+*.iml
