@@ -1,28 +1,12 @@
 == README
-
-This README would normally document whatever steps are necessary to get the
-application up and running.
-
-Things you may want to cover:
-
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
-
-
-Please feel free to use a different markup language if you do not plan to run
-<tt>rake doc:app</tt>.
+* start fedora
+    * for test via: fcrepo_wrapper -p 8984
+* start solr
+    * for test via: solr_wrapper -d solr/config/ --collection_name hydra-development
+* start rails app
+    * for test via: rails s
+* start redis
+    * for test via: docker run -p 6379:6379 --name gdz_redis  redis redis-server --appendonly yes
+* start rescue
+    * bundle exec sidekiq -q mets,5 -q other,2
++ begin import via: ruby ingest.rb

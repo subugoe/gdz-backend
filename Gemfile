@@ -74,3 +74,6 @@ end
 # --- gdz additions ---
 gem 'rdf-vocab'
 gem 'oai'
+gem 'sidekiq'
+gem 'redis-namespace', '~> 1.5', '>= 1.5.2'
+gem 'sinatra', '>= 1.3.0', require: nil
