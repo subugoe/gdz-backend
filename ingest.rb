@@ -50,9 +50,11 @@ class Ingest
 
     response.each do |record|
       # todo remove this
-      return if (i==5)
-      enqueueId(parseId(record.identifier))
-      i = i+1
+      catch (:stop) do
+        throw :stop if (i==5)
+        enqueueInMetsQueue(parseId(record.identifier))
+        i = i+1
+      end
     end
 
     # Get the other pages of identifiers
@@ -60,7 +62,7 @@ class Ingest
       begin
         response = client.list_identifiers(:resumption_token => response.resumption_token)
         response.each do |record|
-          enqueueId(parseId(record.identifier))
+          enqueueInMetsQueue(parseId(record.identifier))
         end
       rescue
         break
@@ -70,7 +72,7 @@ class Ingest
   end
 
 
-  # e.g. oai:gdz.sub.uni-goettingen.de:PPN832796611
+# e.g. oai:gdz.sub.uni-goettingen.de:PPN832796611
   def parseId(id)
 
     # todo collect problem id's and print them at the end
@@ -85,7 +87,7 @@ class Ingest
   end
 
 
-  def enqueueId(ppn)
+  def enqueueInMetsQueue(ppn)
     ProcessMets.perform_async(ppn)
   end
 

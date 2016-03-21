@@ -1,5 +1,9 @@
+require 'nokogiri'
+require 'open-uri'
+
 class ProcessMets
   include Sidekiq::Worker
+
   sidekiq_options queue: :mets, backtrace: true
 
   def initialize
@@ -8,30 +12,28 @@ class ProcessMets
   end
 
   def perform(ppn)
-    @ppn = ppn
-    processMetsFiles
-    @logger.info("process #{@ppn}")
+    processMetsFiles(ppn)
+    @logger.info("process #{ppn}")
   end
 
 
-  def processMetsFiles
+  def processMetsFiles(ppn)
 
-    mets_uri = "http://gdz.sub.uni-goettingen.de/mets/#{@ppn}.xml"
+    # todo check what is the better solution: use ppn or url from oai
+    mets_uri = "http://gdz.sub.uni-goettingen.de/mets/#{ppn}.xml"
     begin
-      @doc       = Nokogiri::XML(open(mets_uri))
-      @mets_path = "tmp_data/#{@ppn}.xml"
+      doc       = Nokogiri::XML(open(mets_uri))
+      mets_path = "tmp_data/#{ppn}.xml"
     rescue
-      @logger.debug("problems to open file #{mets_uri} for #{@ppn}")
+      @logger.debug("problems to open file #{mets_uri} for #{ppn}")
       return
     end
 
     return unless structureOk?
 
-    File.write(@mets_path, @doc.to_xml)
+    File.write(mets_path, doc.to_xml)
 
-    @recordIdentifier = getIdentifier()
-
-    work = updateOrCreateWork
+    work = updateOrCreateWork(ppn, doc)
 
     createFileSets(work)
 
@@ -41,10 +43,10 @@ class ProcessMets
 
   def structureOk?
 
-    structype = @doc.xpath("//mets:structMap[@TYPE='PHYSICAL']")
+    structype = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']")
 
     if (structype.empty?)
-      @logger.debug("problems with structype for #{@ppn}")
+      @logger.debug("problems with structype for #{ppn}")
       return false
     end
 
@@ -60,34 +62,31 @@ class ProcessMets
 
   end
 
-  def createCollection(colname)
 
+  def updateOrCreateWork(ppn, doc)
+
+    # todo delete related objects and file sets
+
+=begin
+    # todo cleanup
     begin
-      col = Collection.find(colname)
-    rescue # ActiveFedora::ObjectNotFoundError
-      # if (col == nil)
-      col       = Collection.new(colname)
-      col.title = colname
-      col.save
-      # end
-    end
-
-    return col
-
-  end
-
-  def updateOrCreateWork
-
-    begin
-      bw = BibliographicWork.find("#{@recordIdentifier}_work")
+      bw = BibliographicWork.find("#{recordIdentifier}_work")
       bw.delete(:eradicate => true)
     rescue
     end
+=end
 
-    bw = BibliographicWork.new(id: "#{@recordIdentifier}_work")
+
+    recordIdentifiers = getIdentifiers(doc.xpath('//mods:mods[1]', 'mods' => 'http://www.loc.gov/mods/v3'))
+
+    # todo add additional related sources (TEI, OCR, external digitized Images)
+
+    bw = BibliographicWork.new(id: "#{recordIdentifiers[0]}_work")
     bw.save
 
-    mods = @doc.xpath('//mods:mods', 'mods' => 'http://www.loc.gov/mods/v3')[0]
+    #
+
+    mods = doc.xpath('//mods:mods', 'mods' => 'http://www.loc.gov/mods/v3')[0]
 
 
     # todo check multiple occurences of terms?
@@ -97,10 +96,10 @@ class ProcessMets
 
     # Strukturtyp
     begin
-      bw.structype = @doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div/@TYPE", 'mets' => 'http://www.loc.gov/METS/').first.value
+      bw.structype = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div/@TYPE", 'mets' => 'http://www.loc.gov/METS/').first.value
     rescue
       bw.structype = nil
-      @logger.debug("structype is nil for #{@ppn}")
+      @logger.debug("structype is nil for #{ppn}")
     end
     bw.save
 
@@ -109,7 +108,7 @@ class ProcessMets
       bw.title = mods.xpath('//mods:title', 'mods' => 'http://www.loc.gov/mods/v3')[0].text
     rescue
       bw.title = nil
-      @logger.debug("title is nil for #{@ppn}")
+      @logger.debug("title is nil for #{ppn}")
     end
     bw.save
 
@@ -122,7 +121,7 @@ class ProcessMets
       end
     rescue
       bw.creator = nil
-      @logger.debug("creator is nil for #{@ppn}")
+      @logger.debug("creator is nil for #{ppn}")
     end
     bw.save
 
@@ -132,7 +131,7 @@ class ProcessMets
       bw.dateCreated = dateIssued
     rescue
       bw.dateCreated = nil
-      @logger.debug("dateCreated is nil for #{@ppn}")
+      @logger.debug("dateCreated is nil for #{ppn}")
     end
     bw.save
 
@@ -142,7 +141,7 @@ class ProcessMets
       bw.placeOfOrigin = placeTerm
     rescue
       bw.placeOfOrigin = nil
-      @logger.debug("placeOfOrigin is nil for #{@ppn}")
+      @logger.debug("placeOfOrigin is nil for #{ppn}")
     end
     bw.save
 
@@ -155,7 +154,7 @@ class ProcessMets
       end
     rescue
       bw.publisher = nil
-      @logger.debug("publisher is nil for #{@ppn}")
+      @logger.debug("publisher is nil for #{ppn}")
     end
     bw.save
 
@@ -164,10 +163,9 @@ class ProcessMets
     begin
       classification    = mods.xpath('//mods:classification', 'mods' => 'http://www.loc.gov/mods/v3').text
       bw.classification = classification
-      col               = createCollection(classification)
-      addToMembers(col, bw)
+      enqueueInCollectionQueue(ppn, bw, classification)
     rescue
-      @logger.debug("no classification set for #{@ppn}")
+      @logger.debug("no classification set for #{ppn}")
     end
     bw.save
 
@@ -176,31 +174,31 @@ class ProcessMets
 
     # PPN (original)
     begin
-      identifier    = @doc.xpath('//mods:mods[1]/mods:identifier[@type="PPNanalog"]', 'mods' => 'http://www.loc.gov/mods/v3').text
+      identifier    = doc.xpath('//mods:mods[1]/mods:identifier[@type="PPNanalog"]', 'mods' => 'http://www.loc.gov/mods/v3').text
       bw.identifier = identifier
     rescue
       bw.identifier = nil
-      @logger.debug("identifier is nil for #{@ppn}")
+      @logger.debug("identifier is nil for #{ppn}")
     end
     bw.save
 
 
     # PPN (digital):
     begin
-      bw.recordIdentifier = @recordIdentifier
+      bw.recordIdentifier = recordIdentifier
     rescue
       bw.recordIdentifier = nil
-      @logger.debug("recordIdentifier is nil for #{@ppn}")
+      @logger.debug("recordIdentifier is nil for #{ppn}")
     end
     bw.save
 
     # PURL
     begin
-      #purl    = @doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div/@CONTENTIDS", 'mets' => 'http://www.loc.gov/METS/').first.value
-      bw.purl = "http://resolver.sub.uni-goettingen.de/purl?#{@ppn}"
+      #purl    = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div/@CONTENTIDS", 'mets' => 'http://www.loc.gov/METS/').first.value
+      bw.purl = "http://resolver.sub.uni-goettingen.de/purl?#{ppn}"
     rescue
       bw.purl = nil
-      @logger.debug("purl is nil for #{@ppn}")
+      @logger.debug("purl is nil for #{ppn}")
     end
     bw.save
 
@@ -213,7 +211,7 @@ class ProcessMets
       bw.physicalDescription = physicalDescription
     rescue
       bw.physicalDescription = nil
-      @logger.debug("physicalDescription is nil for #{@ppn}")
+      @logger.debug("physicalDescription is nil for #{ppn}")
     end
     bw.save
 
@@ -223,7 +221,7 @@ class ProcessMets
       bw.languageTerm = languageTerm
     rescue
       bw.languageTerm = nil
-      @logger.debug("languageTerm is nil for #{@ppn}")
+      @logger.debug("languageTerm is nil for #{ppn}")
     end
     bw.save
 
@@ -238,7 +236,7 @@ class ProcessMets
 
     @biblFileSets = Hash.new
 
-    pageDivs = @doc.xpath("//mets:structMap[@TYPE='LOGICAL']//mets:div", 'mets' => 'http://www.loc.gov/METS/')
+    pageDivs = doc.xpath("//mets:structMap[@TYPE='LOGICAL']//mets:div", 'mets' => 'http://www.loc.gov/METS/')
 
     pageDivs.each do |pageDiv|
 
@@ -247,11 +245,11 @@ class ProcessMets
       type    = pageDiv.attributes["TYPE"]
 
       begin
-        bfs = BibliographicFileSet.find("#{@recordIdentifier}_logical_#{myorder}")
+        bfs = BibliographicFileSet.find("#{recordIdentifier}_logical_#{myorder}")
         bfs.delete(:eradicate => true)
-        bfs = BibliographicFileSet.new(id: "#{@recordIdentifier}_logical_#{myorder}")
+        bfs = BibliographicFileSet.new(id: "#{recordIdentifier}_logical_#{myorder}")
       rescue
-        bfs = BibliographicFileSet.new(id: "#{@recordIdentifier}_logical_#{myorder}")
+        bfs = BibliographicFileSet.new(id: "#{recordIdentifier}_logical_#{myorder}")
       end
 
 
@@ -280,7 +278,7 @@ class ProcessMets
 
     i = 0
 
-    pageDivs = @doc.xpath("//mets:structMap[@TYPE='PHYSICAL']/mets:div/mets:div", 'mets' => 'http://www.loc.gov/METS/')
+    pageDivs = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']/mets:div/mets:div", 'mets' => 'http://www.loc.gov/METS/')
 
     pageDivs.each do |pageDiv|
 
@@ -290,11 +288,11 @@ class ProcessMets
 
 
       begin
-        pfs = MetsFileSet.find("#{@recordIdentifier}_page_#{order}")
+        pfs = MetsFileSet.find("#{recordIdentifier}_page_#{order}")
         pfs.delete(:eradicate => true)
-        pfs = PageFileSet.new(id: "#{@recordIdentifier}_page_#{order}")
+        pfs = PageFileSet.new(id: "#{recordIdentifier}_page_#{order}")
       rescue
-        pfs = PageFileSet.new(id: "#{@recordIdentifier}_page_#{order}")
+        pfs = PageFileSet.new(id: "#{recordIdentifier}_page_#{order}")
       end
 
 
@@ -315,7 +313,7 @@ class ProcessMets
         phys_id = "PHYS_#{order}"
       end
 
-      links = @doc.xpath("//mets:structLink/mets:smLink[@xlink:to='#{phys_id}']/@xlink:from", {'mets' => 'http://www.loc.gov/METS/', 'xlink' => 'http://www.w3.org/1999/xlink'})
+      links = doc.xpath("//mets:structLink/mets:smLink[@xlink:to='#{phys_id}']/@xlink:from", {'mets' => 'http://www.loc.gov/METS/', 'xlink' => 'http://www.w3.org/1999/xlink'})
       links.each do |link|
         j = link.value.split("_")[1].to_i
         @biblFileSets[j].members << pfs
@@ -331,7 +329,7 @@ class ProcessMets
         id = fptr.attributes["FILEID"].value
 
 
-        file = @doc.xpath("//mets:fileSec/mets:fileGrp/mets:file[@ID='#{id}']", {'mets' => 'http://www.loc.gov/METS/'}).first
+        file = doc.xpath("//mets:fileSec/mets:fileGrp/mets:file[@ID='#{id}']", {'mets' => 'http://www.loc.gov/METS/'}).first
 
         mimetype = file.attributes["MIMETYPE"].value
         use      = file.parent.attributes["USE"].value
@@ -360,7 +358,7 @@ class ProcessMets
             pfs.create_derivatives # generates a thumb
             pfs.save
           rescue
-            @logger.debug("could not open file #{href} for #{@ppn} (#{use})")
+            @logger.debug("could not open file #{href} for #{ppn} (#{use})")
             break
           end
 
@@ -388,11 +386,11 @@ class ProcessMets
   def createMetsFileSets(work)
 
     begin
-      mfs = MetsFileSet.find("#{@recordIdentifier}_mets")
+      mfs = MetsFileSet.find("#{recordIdentifier}_mets")
       mfs.delete(:eradicate => true)
-      mfs = MetsFileSet.new(id: "#{@recordIdentifier}_mets")
+      mfs = MetsFileSet.new(id: "#{recordIdentifier}_mets")
     rescue
-      mfs = MetsFileSet.new(id: "#{@recordIdentifier}_mets")
+      mfs = MetsFileSet.new(id: "#{recordIdentifier}_mets")
     end
 
 
@@ -406,7 +404,7 @@ class ProcessMets
       f           = mfs.files.first
       f.mime_type = 'application/xml'
     rescue
-      @logger.debug("could not open file #{@mets_path} for #{@ppn}")
+      @logger.debug("could not open file #{@mets_path} for #{ppn}")
     end
 
     mfs.save
@@ -436,33 +434,39 @@ class ProcessMets
     end
   end
 
-  def getIdentifier()
+  def getIdentifiers(mods)
+
+    arr = Array.new
 
     begin
-      identifier = @doc.xpath('//mods:mods[1]/mods:identifier[@type="gbv-ppn"]', 'mods' => 'http://www.loc.gov/mods/v3').text
-      return identifier if identifier != ""
+      identifier = doc.xpath('//mods:mods[1]/mods:identifier[@type="gbv-ppn"]', 'mods' => 'http://www.loc.gov/mods/v3').text
+      arr << identifier if identifier != ""
     rescue
     end
 
     begin
-      identifier = @doc.xpath('//mods:mods[1]/mods:recordInfo/mods:recordIdentifier[@source="gbv-ppn"]', 'mods' => 'http://www.loc.gov/mods/v3').text
-      return identifier if identifier != ""
+      identifier = doc.xpath('//mods:mods[1]/mods:recordInfo/mods:recordIdentifier[@source="gbv-ppn"]', 'mods' => 'http://www.loc.gov/mods/v3').text
+      arr << identifier if identifier != ""
     rescue
     end
 
     begin
-      identifier = @doc.xpath('//mods:mods[1]/mods:identifier[@type="ppn" or @type="PPN"]', 'mods' => 'http://www.loc.gov/mods/v3').text
-      return identifier if identifier != ""
+      identifier = doc.xpath('//mods:mods[1]/mods:identifier[@type="ppn" or @type="PPN"]', 'mods' => 'http://www.loc.gov/mods/v3').text
+      arr << identifier if identifier != ""
     rescue
     end
 
     begin
-      identifier = @doc.xpath('//mods:mods[1]/mods:identifier[@type="urn" or @type="URN"]', 'mods' => 'http://www.loc.gov/mods/v3').text
-      return identifier if identifier != ""
+      identifier = doc.xpath('//mods:mods[1]/mods:identifier[@type="urn" or @type="URN"]', 'mods' => 'http://www.loc.gov/mods/v3').text
+      arr << identifier if identifier != ""
     rescue
     end
 
-    return nil
+    return arr
+  end
+
+  def enqueueInCollectionQueue(ppn, work_id, classification)
+    ProcessCollection.perform_async(ppn, work_id)
   end
 
 end
