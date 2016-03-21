@@ -16,6 +16,9 @@ class ProcessCollection
 
   def createCollection(colname)
 
+
+    colname.gsub!(/\s/, '_')
+
     begin
       col = Collection.find(colname)
     rescue # ActiveFedora::ObjectNotFoundError

@@ -48,27 +48,30 @@ class Ingest
     # Get the first page of identifiers
     response = client.list_identifiers.to_a
 
-    response.each do |record|
-      # todo remove this
-      catch (:stop) do
+    # todo remove this
+    catch (:stop) do
+
+      response.each do |record|
+        # todo remove this
         throw :stop if (i==5)
         enqueueInMetsQueue(parseId(record.identifier))
         i = i+1
       end
-    end
 
-    # Get the other pages of identifiers
-    while true do
-      begin
-        response = client.list_identifiers(:resumption_token => response.resumption_token)
-        response.each do |record|
-          enqueueInMetsQueue(parseId(record.identifier))
+
+      # Get the other pages of identifiers
+      while true do
+        begin
+          response = client.list_identifiers(:resumption_token => response.resumption_token)
+          response.each do |record|
+            enqueueInMetsQueue(parseId(record.identifier))
+          end
+        rescue
+          break
         end
-      rescue
-        break
       end
-    end
 
+    end
   end
 
 

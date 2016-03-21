@@ -1,5 +1,7 @@
 require 'nokogiri'
 require 'open-uri'
+require 'benchmark'
+
 
 class ProcessMets
   include Sidekiq::Worker
@@ -12,36 +14,64 @@ class ProcessMets
   end
 
   def perform(ppn)
-    processMetsFiles(ppn)
     @logger.info("process #{ppn}")
+    processMetsFiles(ppn)
   end
 
 
   def processMetsFiles(ppn)
 
     # todo check what is the better solution: use ppn or url from oai
-    mets_uri = "http://gdz.sub.uni-goettingen.de/mets/#{ppn}.xml"
     begin
-      doc       = Nokogiri::XML(open(mets_uri))
-      mets_path = "tmp_data/#{ppn}.xml"
+      mets_uri = metsUri(ppn)
+
+      doc = Nokogiri::XML(open(mets_uri))
+        #mets_path = "tmp_data/#{ppn}.xml"
     rescue
       @logger.debug("problems to open file #{mets_uri} for #{ppn}")
       return
     end
 
-    return unless structureOk?
+    return unless structureOk?(ppn, doc)
+
+
+    mets_path = metsPath(ppn)
+
 
     File.write(mets_path, doc.to_xml)
 
-    work = updateOrCreateWork(ppn, doc)
+    recordIdentifiers = getIdentifiers(doc.xpath('//mods:mods[1]', 'mods' => 'http://www.loc.gov/mods/v3'))
+    recordIdentifiers.each do |id|
+      puts "---> id: #{id}"
+    end
 
-    createFileSets(work)
 
-    File.delete(@mets_path)
+    if (recordIdentifiers.size == 0)
+      @logger.debug("no record identifier found for #{ppn}")
+      return
+    end
+
+    puts "---> recordIdentifier: #{recordIdentifiers[0]}"
+
+    work = updateOrCreateWork(ppn, doc, recordIdentifiers)
+    puts work.id
+
+
+    createFileSets(ppn, work, mets_uri, recordIdentifiers[0])
+
+    #File.delete(mets_path)
 
   end
 
-  def structureOk?
+  def metsUri(ppn)
+    return "http://gdz.sub.uni-goettingen.de/mets/#{ppn}.xml"
+  end
+
+  def metsPath(ppn)
+    return "tmp_data/#{ppn}.xml"
+  end
+
+  def structureOk?(ppn, doc)
 
     structype = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']")
 
@@ -54,16 +84,17 @@ class ProcessMets
 
   end
 
-  def createFileSets(work)
+  def createFileSets(ppn, work, doc, recordIdentifier)
 
-    biblfileset = createBiblFileSets(work)
-    pageFileSet = createPageFileSets(work)
-    metsFileSet = createMetsFileSets(work)
+    # todo via worker?
+    biblfileset = createBiblFileSets(ppn, work, doc, recordIdentifier)
+    pageFileSet = createPageFileSets(ppn, work, doc, recordIdentifier)
+    metsFileSet = createMetsFileSets(ppn, work, doc, recordIdentifier)
 
   end
 
 
-  def updateOrCreateWork(ppn, doc)
+  def updateOrCreateWork(ppn, doc, recordIdentifiers)
 
     # todo delete related objects and file sets
 
@@ -77,11 +108,15 @@ class ProcessMets
 =end
 
 
-    recordIdentifiers = getIdentifiers(doc.xpath('//mods:mods[1]', 'mods' => 'http://www.loc.gov/mods/v3'))
-
     # todo add additional related sources (TEI, OCR, external digitized Images)
 
-    bw = BibliographicWork.new(id: "#{recordIdentifiers[0]}_work")
+    begin
+      bw = BibliographicWork.find("#{recordIdentifiers[0]}_work")
+      bw.delete(:eradicate => true)
+      bw = BibliographicWork.new(id: "#{recordIdentifiers[0]}_work")
+    rescue # ActiveFedora::ObjectNotFoundError
+      bw = BibliographicWork.new(id: "#{recordIdentifiers[0]}_work")
+    end
     bw.save
 
     #
@@ -101,7 +136,7 @@ class ProcessMets
       bw.structype = nil
       @logger.debug("structype is nil for #{ppn}")
     end
-    bw.save
+    #bw.save
 
     # Titel
     begin
@@ -110,7 +145,7 @@ class ProcessMets
       bw.title = nil
       @logger.debug("title is nil for #{ppn}")
     end
-    bw.save
+    #bw.save
 
     # Autor
     begin
@@ -123,7 +158,7 @@ class ProcessMets
       bw.creator = nil
       @logger.debug("creator is nil for #{ppn}")
     end
-    bw.save
+    #bw.save
 
     # Erscheinungsjahr
     begin
@@ -133,7 +168,7 @@ class ProcessMets
       bw.dateCreated = nil
       @logger.debug("dateCreated is nil for #{ppn}")
     end
-    bw.save
+    #bw.save
 
     # Erscheinungsort
     begin
@@ -143,7 +178,7 @@ class ProcessMets
       bw.placeOfOrigin = nil
       @logger.debug("placeOfOrigin is nil for #{ppn}")
     end
-    bw.save
+    #bw.save
 
     # Verlag
     begin
@@ -156,18 +191,18 @@ class ProcessMets
       bw.publisher = nil
       @logger.debug("publisher is nil for #{ppn}")
     end
-    bw.save
+    #bw.save
 
     # todo put in default collectionm if no classification is set
     # Kollektionen
     begin
       classification    = mods.xpath('//mods:classification', 'mods' => 'http://www.loc.gov/mods/v3').text
       bw.classification = classification
-      enqueueInCollectionQueue(ppn, bw, classification)
+      enqueueInCollectionQueue(ppn, bw.id, classification)
     rescue
-      @logger.debug("no classification set for #{ppn}")
+      @logger.debug("no classification set for #{ppn}, collection not created")
     end
-    bw.save
+    #bw.save
 
     # todo Gescannte Seiten
 
@@ -180,7 +215,7 @@ class ProcessMets
       bw.identifier = nil
       @logger.debug("identifier is nil for #{ppn}")
     end
-    bw.save
+    #bw.save
 
 
     # PPN (digital):
@@ -190,7 +225,7 @@ class ProcessMets
       bw.recordIdentifier = nil
       @logger.debug("recordIdentifier is nil for #{ppn}")
     end
-    bw.save
+    #bw.save
 
     # PURL
     begin
@@ -200,7 +235,7 @@ class ProcessMets
       bw.purl = nil
       @logger.debug("purl is nil for #{ppn}")
     end
-    bw.save
+    #bw.save
 
     # todo sub opac
 
@@ -213,7 +248,7 @@ class ProcessMets
       bw.physicalDescription = nil
       @logger.debug("physicalDescription is nil for #{ppn}")
     end
-    bw.save
+    #bw.save
 
     # Language
     begin
@@ -223,26 +258,27 @@ class ProcessMets
       bw.languageTerm = nil
       @logger.debug("languageTerm is nil for #{ppn}")
     end
-    bw.save
 
+
+    bw.save
     return bw
 
   end
 
 
-  def createBiblFileSets(work)
+  def createBiblFileSets(ppn, work, doc, recordIdentifier)
 
-    i = 0
+    myorder = 0
 
-    @biblFileSets = Hash.new
+    biblFileSets = Hash.new
 
     pageDivs = doc.xpath("//mets:structMap[@TYPE='LOGICAL']//mets:div", 'mets' => 'http://www.loc.gov/METS/')
 
     pageDivs.each do |pageDiv|
 
-      myorder = i
-      label   = pageDiv.attributes["LABEL"]
-      type    = pageDiv.attributes["TYPE"]
+      #myorder = i
+      label = pageDiv.attributes["LABEL"]
+      type  = pageDiv.attributes["TYPE"]
 
       begin
         bfs = BibliographicFileSet.find("#{recordIdentifier}_logical_#{myorder}")
@@ -264,9 +300,9 @@ class ProcessMets
       work.save
 
       # todo via background processing? put in redis and find via id at processing time
-      @biblFileSets[i] = bfs
+      #biblFileSets[i] = bfs
 
-      i = i+1
+      myorder = myorder + 1
 
     end
 
@@ -274,9 +310,9 @@ class ProcessMets
 
   end
 
-  def createPageFileSets(work)
+  def createPageFileSets(ppn, work, doc, recordIdentifier)
 
-    i = 0
+    #ii = 0
 
     pageDivs = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']/mets:div/mets:div", 'mets' => 'http://www.loc.gov/METS/')
 
@@ -316,8 +352,11 @@ class ProcessMets
       links = doc.xpath("//mets:structLink/mets:smLink[@xlink:to='#{phys_id}']/@xlink:from", {'mets' => 'http://www.loc.gov/METS/', 'xlink' => 'http://www.w3.org/1999/xlink'})
       links.each do |link|
         j = link.value.split("_")[1].to_i
-        @biblFileSets[j].members << pfs
-        @biblFileSets[j].save
+
+        bfs = BibliographicFileSet.find("#{recordIdentifier}_logical_#{j}")
+
+        bfs.members << pfs
+        bfs.save
       end
 
 
@@ -375,15 +414,15 @@ class ProcessMets
       work.save
 
 
-      i = i+1
+      # i = i+1
 
     end
 
-#    return pf
+    #    return pf
 
   end
 
-  def createMetsFileSets(work)
+  def createMetsFileSets(ppn, work, doc, recordIdentifier)
 
     begin
       mfs = MetsFileSet.find("#{recordIdentifier}_mets")
@@ -399,12 +438,12 @@ class ProcessMets
     mfs.modsVersion = 1
 
     begin
-      Hydra::Works::UploadFileToFileSet.call(mfs, open(@mets_path))
+      Hydra::Works::UploadFileToFileSet.call(mfs, open(mets_path(ppn)))
 
       f           = mfs.files.first
       f.mime_type = 'application/xml'
     rescue
-      @logger.debug("could not open file #{@mets_path} for #{ppn}")
+      @logger.debug("could not open file #{mets_path(ppn)} for #{ppn}")
     end
 
     mfs.save
@@ -439,25 +478,25 @@ class ProcessMets
     arr = Array.new
 
     begin
-      identifier = doc.xpath('//mods:mods[1]/mods:identifier[@type="gbv-ppn"]', 'mods' => 'http://www.loc.gov/mods/v3').text
+      identifier = mods.xpath('mods:identifier[@type="gbv-ppn"]', 'mods' => 'http://www.loc.gov/mods/v3').text
       arr << identifier if identifier != ""
     rescue
     end
 
     begin
-      identifier = doc.xpath('//mods:mods[1]/mods:recordInfo/mods:recordIdentifier[@source="gbv-ppn"]', 'mods' => 'http://www.loc.gov/mods/v3').text
+      identifier = mods.xpath('mods:recordInfo/mods:recordIdentifier[@source="gbv-ppn"]', 'mods' => 'http://www.loc.gov/mods/v3').text
       arr << identifier if identifier != ""
     rescue
     end
 
     begin
-      identifier = doc.xpath('//mods:mods[1]/mods:identifier[@type="ppn" or @type="PPN"]', 'mods' => 'http://www.loc.gov/mods/v3').text
+      identifier = mods.xpath('mods:identifier[@type="ppn" or @type="PPN"]', 'mods' => 'http://www.loc.gov/mods/v3').text
       arr << identifier if identifier != ""
     rescue
     end
 
     begin
-      identifier = doc.xpath('//mods:mods[1]/mods:identifier[@type="urn" or @type="URN"]', 'mods' => 'http://www.loc.gov/mods/v3').text
+      identifier = mods.xpath('mods:identifier[@type="urn" or @type="URN"]', 'mods' => 'http://www.loc.gov/mods/v3').text
       arr << identifier if identifier != ""
     rescue
     end
@@ -466,7 +505,7 @@ class ProcessMets
   end
 
   def enqueueInCollectionQueue(ppn, work_id, classification)
-    ProcessCollection.perform_async(ppn, work_id)
+    ProcessCollection.perform_async(ppn, work_id, classification)
   end
 
 end
