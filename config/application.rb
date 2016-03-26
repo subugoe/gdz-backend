@@ -8,7 +8,10 @@ Bundler.require(*Rails.groups)
 
 module HydraWorksDemo
   class Application < Rails::Application
-    
+
+    # the new line added for autoload of lib
+    config.autoload_paths += %W(#{config.root}/lib)
+
     config.generators do |g|
       g.test_framework :rspec, :spec => true
     end
