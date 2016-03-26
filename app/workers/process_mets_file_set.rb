@@ -1,8 +1,7 @@
 require 'nokogiri'
 require 'open-uri'
 require 'benchmark'
-require 'redis-semaphore'
-require 'helper/process_mets_helper'
+require 'helper/process_mets_file_set_helper'
 
 class ProcessMetsFileSet
   include Sidekiq::Worker

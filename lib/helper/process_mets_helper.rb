@@ -1,6 +1,5 @@
 require 'nokogiri'
 require 'open-uri'
-require 'benchmark'
 require 'redis-semaphore'
 require 'helper/global_helper'
 
@@ -22,16 +21,13 @@ class ProcessMetsHelper
 
     # todo check what is the better solution: use ppn or url from oai
     begin
-
       @doc = Nokogiri::XML(open(metsUri()))
-        #mets_path = "tmp_data/#{@ppn}.xml"
     rescue Exception => e
       @logger.debug("problems to open file #{metsUri()} for #{@ppn}")
       return
     end
 
     return unless structureOk?(@doc)
-
 
     createFile()
 

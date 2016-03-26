@@ -1,13 +1,14 @@
 require 'nokogiri'
 require 'open-uri'
-require 'benchmark'
+require 'redis-semaphore'
+
 
 
 class ProcessPageFileSetHelper
 
 
   def initialize(work_id, recordIdentifier)
-    @semaphore    = Mutex.new
+    @s = Redis::Semaphore.new(:semaphore_name, :host => "192.168.99.100")
     @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
 

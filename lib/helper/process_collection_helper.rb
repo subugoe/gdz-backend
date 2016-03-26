@@ -1,12 +1,13 @@
 require 'nokogiri'
 require 'open-uri'
 require 'benchmark'
+require 'redis-semaphore'
 
 
 class ProcessCollectionHelper
 
 
-  def initialize(ppn, work_id, classification)
+  def initialize(ppn, work_id, colname)
     @s = Redis::Semaphore.new(:semaphore_name, :host => "192.168.99.100")
 
     @logger       = Logger.new(STDOUT)
@@ -14,18 +15,15 @@ class ProcessCollectionHelper
 
     @ppn     = ppn
     @work_id = work_id
-    @colname = classification
-
+    @colname = colname
   end
 
   def createCollection
 
     # todo remove the lock if possible
-    #@semaphore.synchronize do
 
     colnameWithoutWithespaces = @colname.gsub(/\s/, '_')
     col = nil
-
 
     @s.lock do
       begin
@@ -34,7 +32,6 @@ class ProcessCollectionHelper
 
         col = Collection.create(id: colnameWithoutWithespaces) do |col|
           col.title = @colname
-          #col.save
         end
 
         @logger.debug("new collection #{@colname} created")
@@ -45,8 +42,6 @@ class ProcessCollectionHelper
     end
 
     addToMembers(col)
-
-    #end
 
   end
 

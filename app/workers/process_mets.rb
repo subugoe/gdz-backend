@@ -1,6 +1,5 @@
 require 'nokogiri'
 require 'open-uri'
-require 'benchmark'
 require 'redis-semaphore'
 require 'helper/process_mets_helper'
 

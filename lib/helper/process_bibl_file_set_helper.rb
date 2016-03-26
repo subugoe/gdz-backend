@@ -1,10 +1,15 @@
 require 'nokogiri'
 require 'open-uri'
-require 'benchmark'
+require 'redis-semaphore'
 
 
 class ProcessBiblFileSetHelper
 
+
+  def initialize
+    @s = Redis::Semaphore.new(:semaphore_name, :host => "192.168.99.100")
+
+  end
 
   def createBiblFileSets(work_id, ppn)
 
