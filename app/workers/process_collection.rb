@@ -1,48 +1,21 @@
+require 'thread'
+require 'helper/process_collection_helper'
+
 class ProcessCollection
   include Sidekiq::Worker
 
-  sidekiq_options queue: :collection, backtrace: true
+  sidekiq_options queue: :collection, backtrace: true, retry: false
 
   def initialize
+    @semaphore    = Mutex.new
     @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
   end
 
   def perform(ppn, work_id, classification)
-    col               = createCollection(classification)
-    addToMembers(col, work_id)
-    @logger.info("process #{ppn}")
-  end
 
-  def createCollection(colname)
-
-
-    colname.gsub!(/\s/, '_')
-
-    begin
-      col = Collection.find(colname)
-    rescue # ActiveFedora::ObjectNotFoundError
-      # if (col == nil)
-      col       = Collection.new(colname)
-      col.title = colname
-      col.save
-      # end
-    end
-
-    return col
-
-  end
-
-  def addToMembers(collection, work_id)
-
-    bw = BibliographicWork.find(work_id)
-
-    contained = collection.members.select { |m| m.id == bw.id }
-
-    if contained.empty?
-      collection.members << bw
-      collection.save
-    end
+    ProcessCollectionHelper.new(ppn, work_id, classification).createCollection
+    @logger.info("Collection for #{ppn} processed")
   end
 
 end

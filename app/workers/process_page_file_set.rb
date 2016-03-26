@@ -4,10 +4,10 @@ require 'benchmark'
 require 'redis-semaphore'
 require 'helper/process_mets_helper'
 
-class ProcessMets
+class ProcessPageFileSet
   include Sidekiq::Worker
 
-  sidekiq_options queue: :mets, backtrace: true, retry: false
+  sidekiq_options queue: :pagefileset, backtrace: true, retry: false
 
   def initialize
     @s            = Redis::Semaphore.new(:semaphore_name, :host => "192.168.99.100")
@@ -19,9 +19,9 @@ class ProcessMets
     #@logger.info("ProcessMets #{ppn}")
 
 
-    #@s.lock do
+    @s.lock do
       ProcessMetsHelper.new(ppn).processMetsFiles
-    #end
+    end
 
 
     @logger.info("METS for #{ppn} processed")

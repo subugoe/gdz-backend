@@ -2,12 +2,12 @@ require 'nokogiri'
 require 'open-uri'
 require 'benchmark'
 require 'redis-semaphore'
-require 'helper/process_mets_helper'
+require 'helper/process_bibl_file_set_helper'
 
-class ProcessMets
+class ProcessBiblFileSet
   include Sidekiq::Worker
 
-  sidekiq_options queue: :mets, backtrace: true, retry: false
+  sidekiq_options queue: :biblfileset, backtrace: true, retry: false
 
   def initialize
     @s            = Redis::Semaphore.new(:semaphore_name, :host => "192.168.99.100")
@@ -19,9 +19,9 @@ class ProcessMets
     #@logger.info("ProcessMets #{ppn}")
 
 
-    #@s.lock do
-      ProcessMetsHelper.new(ppn).processMetsFiles
-    #end
+    @s.lock do
+      ProcessBiblFileSetHelper.new(ppn).processMetsFiles
+    end
 
 
     @logger.info("METS for #{ppn} processed")

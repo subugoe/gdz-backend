@@ -4,10 +4,10 @@ require 'benchmark'
 require 'redis-semaphore'
 require 'helper/process_mets_helper'
 
-class ProcessMets
+class ProcessMetsFileSet
   include Sidekiq::Worker
 
-  sidekiq_options queue: :mets, backtrace: true, retry: false
+  sidekiq_options queue: :metsfileset, backtrace: true, retry: false
 
   def initialize
     @s            = Redis::Semaphore.new(:semaphore_name, :host => "192.168.99.100")
