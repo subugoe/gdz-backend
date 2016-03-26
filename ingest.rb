@@ -29,6 +29,12 @@ class Ingest
     # todo add direktory and file based processing
     # if - else - elsif
 
+    begin
+      Collection.find("Testcollection")
+    rescue ActiveFedora::ObjectNotFoundError => e
+      Collection.create(id: "Testcollection")
+    end
+
     doOAIProcessing()
 
   end
@@ -66,7 +72,8 @@ class Ingest
           response.each do |record|
             enqueueInMetsQueue(parseId(record.identifier))
           end
-        rescue
+        rescue Exception => e
+          @logger.debug("problems to harvest metadata (identfiers) via oai")
           break
         end
       end
@@ -91,6 +98,7 @@ class Ingest
 
 
   def enqueueInMetsQueue(ppn)
+    #ProcessMets.perform_async(ppn)
     ProcessMets.perform_async(ppn)
   end
 
