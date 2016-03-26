@@ -1,0 +1,75 @@
+require 'nokogiri'
+require 'open-uri'
+require 'benchmark'
+
+
+class ProcessCollectionHelper
+
+
+  def initialize(ppn, work_id, classification)
+    @s = Redis::Semaphore.new(:semaphore_name, :host => "192.168.99.100")
+
+    @logger       = Logger.new(STDOUT)
+    @logger.level = Logger::DEBUG
+
+    @ppn     = ppn
+    @work_id = work_id
+    @colname = classification
+
+  end
+
+  def createCollection
+
+    # todo remove the lock if possible
+    #@semaphore.synchronize do
+
+    colnameWithoutWithespaces = @colname.gsub(/\s/, '_')
+    col = nil
+
+
+    @s.lock do
+      begin
+        col = Collection.find(colnameWithoutWithespaces)
+      rescue ActiveFedora::ObjectNotFoundError => e # ActiveFedora::ObjectNotFoundError
+
+        col = Collection.create(id: colnameWithoutWithespaces) do |col|
+          col.title = @colname
+          #col.save
+        end
+
+        @logger.debug("new collection #{@colname} created")
+      rescue Exception => e
+        @logger.debug("Exception (#{e.message}) while find or create collection '#{colnameWithoutWithespaces}'")
+      end
+
+    end
+
+    addToMembers(col)
+
+    #end
+
+  end
+
+  def addToMembers(collection)
+
+    begin
+      bw = BibliographicWork.find(@work_id)
+
+      contained = collection.members.select { |m| m.id == bw.id }
+
+      if contained.empty?
+        collection.members << bw
+        @s.lock do
+          collection.save
+        end
+      end
+
+    rescue ActiveFedora::ObjectNotFoundError
+      @logger.debug("BibliographicWork '#{@work_id}' could not be found, it is not added to collection #{collection.id}")
+    rescue Exception => e
+      @logger.debug("Exception (#{e.message}) while add work '#{@work_id}' as member to collection '#{collection.id}'")
+    end
+
+  end
+
+end
