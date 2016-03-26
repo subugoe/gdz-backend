@@ -9,22 +9,13 @@ class ProcessMetsFileSet
   sidekiq_options queue: :metsfileset, backtrace: true, retry: false
 
   def initialize
-    @s            = Redis::Semaphore.new(:semaphore_name, :host => "192.168.99.100")
     @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
   end
 
-  def perform(ppn)
-    #@logger.info("ProcessMets #{ppn}")
-
-
-    #@s.lock do
-      ProcessMetsHelper.new(ppn).processMetsFiles
-    #end
-
-
-    @logger.info("METS for #{ppn} processed")
+  def perform(ppn, work_id)
+    ProcessMetsFileSetHelper.new(ppn, work_id).createMetsFileSets
+    @logger.info("METS file set created for #{ppn}")
   end
-
 
 end

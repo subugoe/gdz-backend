@@ -43,7 +43,7 @@ class ProcessMetsHelper
 
     work = updateOrCreateWork()
 
-    #createFileSets(work)
+    createFileSets(work.id)
 
     #fileDelete()
 
@@ -65,12 +65,12 @@ class ProcessMetsHelper
 
   end
 
-  def createFileSets(work)
+  def createFileSets(work_id)
 
     # todo via worker?
-    biblfileset = createBiblFileSets(work, @ppn)
-    pageFileSet = createPageFileSets(work, @ppn)
-    metsFileSet = createMetsFileSets(work, @ppn)
+    #biblfileset = createBiblFileSets(work, @ppn)
+    #pageFileSet = createPageFileSets(work, @ppn)
+    enqueueInMetsFilesetQueue(work_id)
   end
 
 
@@ -285,9 +285,11 @@ class ProcessMetsHelper
   end
 
   def enqueueInCollectionQueue(work_id, classification)
-    #ProcessCollection.perform_async(@ppn, work_id, classification)
     ProcessCollection.perform_async(@ppn, work_id, classification)
   end
 
+  def enqueueInMetsFilesetQueue(work_id)
+    ProcessMetsFileSet.perform_async(@ppn, work_id)
+  end
 
 end
