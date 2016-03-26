@@ -35,12 +35,6 @@ class Ingest
       Collection.create(id: "Testcollection")
     end
 
-    doOAIProcessing()
-
-  end
-
-  def doOAIProcessing
-
     enqueueIdsFromOAI()
 
   end
@@ -98,7 +92,6 @@ class Ingest
 
 
   def enqueueInMetsQueue(ppn)
-    #ProcessMets.perform_async(ppn)
     ProcessMets.perform_async(ppn)
   end
 
