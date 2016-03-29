@@ -1,6 +1,7 @@
 == README
 * start fedora
     * for test via: fcrepo_wrapper -p 8984
+    * delet the fedora data dir and solr index, and restarts fedora (if the konfiguration is already running): ./cleanup.sh
 * start solr
     * for test via: solr_wrapper -d solr/config/ --collection_name hydra-development
 * start redis
