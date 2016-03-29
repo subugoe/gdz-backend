@@ -14,7 +14,9 @@ class BibliographicFileSet < ActiveFedora::Base
     index.type :integer
   end
 
-
+  property :recordIdentifier, predicate: ::RDF::Vocab::MODS.recordIdentifier, multiple: false do |index|
+    index.as :stored_searchable
+  end
 
   def page?
     false

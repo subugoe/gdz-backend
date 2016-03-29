@@ -1,23 +1,25 @@
 require 'nokogiri'
 require 'open-uri'
 require 'redis-semaphore'
-
+require 'helper/global_helper'
 
 
 class ProcessPageFileSetHelper
+  include GlobalHelper
 
 
-  def initialize(work_id, recordIdentifier)
-    @s = Redis::Semaphore.new(:semaphore_name, :host => "192.168.99.100")
+  def initialize(ppn, work_id)
+    @s            = Redis::Semaphore.new(:semaphore_name, :host => "192.168.99.100")
     @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
 
     @work_id = work_id
-    @recordIdentifier = recordIdentifier
-
+    @ppn     = ppn
   end
 
-  def createPageFileSets(work_id, ppn)
+  def createPageFileSets
+
+    doc = openDocFromPath()
 
     pageDivs = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']/mets:div/mets:div", 'mets' => 'http://www.loc.gov/METS/')
 
@@ -28,19 +30,34 @@ class ProcessPageFileSetHelper
       type       = pageDiv.attributes["TYPE"]
 
 
-      begin
-        pfs = PageFileSet.find("#{recordIdentifier}_page_#{order}")
-        pfs.delete(:eradicate => true)
-        pfs = PageFileSet.new(id: "#{recordIdentifier}_page_#{order}")
-      rescue Exception => e
-        pfs = PageFileSet.new(id: "#{recordIdentifier}_page_#{order}")
-      end
+      pfs    = nil
+      pfs_id = "#{@ppn}_page_#{order}"
 
+
+      @s.lock do
+        begin
+          pfs = PageFileSet.where(recordIdentifier: "#{pfs_id}").first
+          pfs.delete(:eradicate => true) if pfs != nil
+          pfs = PageFileSet.create() do |fs|
+            fs.recordIdentifier = pfs_id
+          end
+        rescue ActiveFedora::ObjectNotFoundError => e
+          pfs = PageFileSet.create() do |fs|
+            fs.recordIdentifier = pfs_id
+          end
+          @logger.debug("new PageFileSet #{pfs_id} created")
+        rescue Exception => e
+          @logger.debug("Exception (#{e.message}) while PageFileSet creation for '#{pfs_id}'")
+        end
+      end
 
       pfs.order      = order.nil? ? nil : order.value
       pfs.orderlabel = orderlabel.nil? ? nil : orderlabel.value
       pfs.pagetype   = type.nil? ? nil : type.value
-      pfs.save
+
+      @s.lock do
+        pfs.save
+      end
 
       order = pfs.order.to_i
 
@@ -58,10 +75,8 @@ class ProcessPageFileSetHelper
       links.each do |link|
         j = link.value.split("_")[1].to_i
 
-        bfs = BibliographicFileSet.find("#{recordIdentifier}_logical_#{j}")
-
-        bfs.members << pfs
-        bfs.save
+        # todo take care that BibliographicWork is processed before try to add pfs to bw
+        addMemberToBibliographicWork(pfs, j)
       end
 
 
@@ -71,7 +86,6 @@ class ProcessPageFileSetHelper
       fptrs = pageDivs[0].xpath("mets:fptr", 'mets' => 'http://www.loc.gov/METS/')
       fptrs.each do |fptr|
         id = fptr.attributes["FILEID"].value
-
 
         file = doc.xpath("//mets:fileSec/mets:fileGrp/mets:file[@ID='#{id}']", {'mets' => 'http://www.loc.gov/METS/'}).first
 
@@ -95,29 +109,33 @@ class ProcessPageFileSetHelper
               file1 = open(href.path)
             end
 
-            Hydra::Works::UploadFileToFileSet.call(pfs, file1)
+            @s.lock do
+              Hydra::Works::UploadFileToFileSet.call(pfs, file1)
+            end
 
             f1           = pfs.files.first
             f1.mime_type = mimetype
             pfs.create_derivatives # generates a thumb
-            pfs.save
+            @s.lock do
+              pfs.save
+            end
 
           rescue Exception => e
             @logger.debug("could not open file #{href} for #{@ppn} (#{use})")
             break
           end
 
+          # todo THUMBS
           #elsif (use == "THUMBS")
 
+          # todo GDZOCR
           #elsif (use == "GDZOCR")
 
         end
 
       end
 
-
-      work.members << pfs
-      work.save
+      addMemberToWork(pfs)
 
     end
 

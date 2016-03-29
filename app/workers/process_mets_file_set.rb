@@ -1,6 +1,3 @@
-require 'nokogiri'
-require 'open-uri'
-require 'benchmark'
 require 'helper/process_mets_file_set_helper'
 
 class ProcessMetsFileSet

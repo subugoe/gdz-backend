@@ -20,12 +20,8 @@ class ProcessMetsHelper
   def processMetsFiles
 
     # todo check what is the better solution: use ppn or url from oai
-    begin
-      @doc = Nokogiri::XML(open(metsUri()))
-    rescue Exception => e
-      @logger.debug("problems to open file #{metsUri()} for #{@ppn}")
-      return
-    end
+
+    @doc = openDocFromUri()
 
     return unless structureOk?(@doc)
 
@@ -67,10 +63,12 @@ class ProcessMetsHelper
 
   def createFileSets(work_id)
 
-    # todo via worker?
-    #biblfileset = createBiblFileSets(work, @ppn)
-    #pageFileSet = createPageFileSets(work, @ppn)
-    enqueueInMetsFilesetQueue(work_id)
+    enqueueInFilesetQueue(work_id)
+
+    #enqueueInBiblFilesetQueue(work_id)
+    #enqueueInMetsFilesetQueue(work_id)
+    #enqueueInPageFilesetQueue(work_id)
+
   end
 
 
@@ -84,17 +82,21 @@ class ProcessMetsHelper
     @s.lock do
 
       begin
-        bw = BibliographicWork.find(work_id)
+        bw = BibliographicWork.where(recordIdentifier: work_id).first
 
-        bw.delete(:eradicate => true)
+        bw.delete(:eradicate => true) if bw != nil
         #bw = BibliographicWork.new(id: work_id)
 
-        bw = BibliographicWork.create(id: work_id)
+        bw = BibliographicWork.create() do |bw|
+          bw.recordIdentifier = work_id
+        end
           #bw.save
 
       rescue ActiveFedora::ObjectNotFoundError => e
         #bw = BibliographicWork.new(id: work_id)
-        bw = BibliographicWork.create(id: work_id)
+        bw = bw = BibliographicWork.create() do |bw|
+          bw.recordIdentifier = work_id
+        end
         @logger.debug("create new BibliographicWork #{work_id}")
       rescue Exception => e
         @logger.debug("Exception (#{e.message}) in updateOrCreateWork for '#{work_id}'")
@@ -288,8 +290,21 @@ class ProcessMetsHelper
     ProcessCollection.perform_async(@ppn, work_id, classification)
   end
 
+=begin
   def enqueueInMetsFilesetQueue(work_id)
     ProcessMetsFileSet.perform_async(@ppn, work_id)
   end
 
+  def enqueueInBiblFilesetQueue(work_id)
+    ProcessBiblFileSet.perform_async(@ppn, work_id)
+  end
+
+  def enqueueInPageFilesetQueue(work_id)
+    ProcessPageFileSet.perform_async(@ppn, work_id)
+  end
+=end
+
+  def enqueueInFilesetQueue(work_id)
+    ProcessFileSet.perform_async(@ppn, work_id)
+  end
 end

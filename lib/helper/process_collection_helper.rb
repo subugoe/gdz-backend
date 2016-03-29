@@ -27,11 +27,17 @@ class ProcessCollectionHelper
 
     @s.lock do
       begin
-        col = Collection.find(colnameWithoutWithespaces)
+        col = Collection.where(recordIdentifier: colnameWithoutWithespaces).first
+        if col == nil
+          col = Collection.create() do |c|
+            c.title = @colname
+            c.recordIdentifier = colnameWithoutWithespaces
+          end
+        end
       rescue ActiveFedora::ObjectNotFoundError => e # ActiveFedora::ObjectNotFoundError
-
-        col = Collection.create(id: colnameWithoutWithespaces) do |col|
-          col.title = @colname
+        col = Collection.create() do |c|
+          c.title = @colname
+          c.recordIdentifier = colnameWithoutWithespaces
         end
 
         @logger.debug("new collection #{@colname} created")
@@ -60,9 +66,10 @@ class ProcessCollectionHelper
       end
 
     rescue ActiveFedora::ObjectNotFoundError
-      @logger.debug("BibliographicWork '#{@work_id}' could not be found, it is not added to collection #{collection.id}")
+      @logger.debug("BibliographicWork '#{@work_id}' could not be found, it is not added to collection #{collection.title}")
     rescue Exception => e
-      @logger.debug("Exception (#{e.message}) while add work '#{@work_id}' as member to collection '#{collection.id}'")
+      @logger.debug("Exception (#{e.message}) while add work '#{@work_id}' as member to collection '#{collection.title}'")
+      e.backtrace.each {|bt| puts "--> #{bt}"}
     end
 
   end

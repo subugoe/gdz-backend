@@ -1,6 +1,7 @@
 require 'nokogiri'
 require 'open-uri'
 require 'redis-semaphore'
+require 'helper/global_helper'
 
 
 class ProcessMetsFileSetHelper
@@ -17,15 +18,25 @@ class ProcessMetsFileSetHelper
 
   def createMetsFileSets
 
-    mfs = nil
+    mfs   = nil
+    fs_id = "#{@ppn}_mets"
 
     @s.lock do
       begin
-        mfs = MetsFileSet.find("#{@ppn}_mets")
-        mfs.delete(:eradicate => true)
-        mfs = MetsFileSet.create(id: "#{@ppn}_mets")
+        mfs = MetsFileSet.where(recordIdentifier: "#{fs_id}").first
+        mfs.delete(:eradicate => true) if mfs != nil
+        mfs = MetsFileSet.create() do |fs|
+          fs.recordIdentifier = fs_id
+        end
+
+      rescue ActiveFedora::ObjectNotFoundError => e
+        mfs = MetsFileSet.create() do |fs|
+          fs.recordIdentifier = fs_id
+        end
+
+        @logger.debug("new MetsFileSet #{fs_id} created")
       rescue Exception => e
-        mfs = MetsFileSet.create(id: "#{@ppn}_mets")
+        @logger.debug("Exception (#{e.message}) while MetsFileSet creation for '#{fs_id}'")
       end
     end
 
@@ -34,7 +45,10 @@ class ProcessMetsFileSetHelper
     mfs.modsVersion = 1
 
     begin
-      Hydra::Works::UploadFileToFileSet.call(mfs, open(metsPath()))
+      @s.lock do
+        Hydra::Works::UploadFileToFileSet.call(mfs, open(metsPath()))
+      end
+
       f           = mfs.files.first
       f.mime_type = 'application/xml'
     rescue Exception => e
@@ -45,18 +59,7 @@ class ProcessMetsFileSetHelper
       mfs.save
     end
 
-
-    begin
-      @s.lock do
-        work = BibliographicWork.find(@work_id)
-        work.members << mfs
-        work.save
-      end
-    rescue ActiveFedora::ObjectNotFoundError => e
-      @logger.debug("BibliographicWork #{@work_id} not found, METS file could not be associated")
-    rescue Exception => e
-      @logger.debug("Exception (#{e.message}) while sind BibliographicWork '#{@work_id}'")
-    end
+    addMemberToWork(mfs)
 
     return mfs
 
