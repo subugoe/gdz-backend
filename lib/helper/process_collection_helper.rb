@@ -8,7 +8,7 @@ class ProcessCollectionHelper
 
 
   def initialize(ppn, work_id, colname)
-    @s = Redis::Semaphore.new(:semaphore_name, :host => "192.168.99.100")
+    @s = Redis::Semaphore.new(:semaphore_name, :host => "redis")
 
     @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
