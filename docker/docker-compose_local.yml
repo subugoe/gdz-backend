@@ -1,0 +1,24 @@
+web:
+  extends:
+    file: docker-compose.yml
+    service: web
+  links:
+    - solr:solr
+    - db:db
+  environment:
+    - DOCKER_ENV=local
+    - RAILS_ENV=development
+solr:
+  image: makuk66/docker-solr:4.10.4
+  #mem_limit: 2000m
+  ports:
+    - "8983:8983"
+  volumes:
+    - ./config/solr/schema.xml:/opt/solr/example/solr/collection1/conf/schema.xml
+  environment:
+    - JAVA_OPTS="-server -Xms512M -Xmx1792M -XX:MaxPermSize=768M"
+
+db:
+  extends:
+    file: compose_default.yml
+    service: db

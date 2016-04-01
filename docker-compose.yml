@@ -1,0 +1,74 @@
+  # see: https://hub.docker.com/r/yinlinchen/fcrepo4-docker/
+  # contains
+  #   Tomcat (...:8080/manager/html -> (fedora4/fedora4)
+  #   Fedora (...:8080/fcrepo)
+  #   Solr (...:8080/solr)
+  #   Fuseki (...:8080/fuseki)
+  #   Apache Karaf, Apache Camel
+fcrepo:
+  image: yinlinchen/fcrepo4-docker:4.5.0
+  container_name: fcrepo
+  ports:
+    - "8080:8080"
+
+
+redis:
+  image: redis
+  command: redis-server --appendonly yes
+  container_name: redis
+  ports:
+    - "6379:6379"
+
+
+web:
+  build: .
+  command: bundle exec passenger start --port 3000
+  container_name: web
+  links:
+    - redis:redis
+    - fcrepo:fcrepo
+  volumes:
+    - .:/web
+  ports:
+    - "80:3000"
+
+# for optimization start more then one instance of the node running the background processing (via docker swarm or kubernetes)
+#worker:
+
+
+#solr:
+#  # see: https://hub.docker.com/_/solr/
+#  image: solr
+#  user: solr
+#  container_name: solr
+#  ports:
+#    - "8983:8983"
+
+
+#fuseki:
+#  # see: https://hub.docker.com/r/stain/jena-fuseki/
+#  image: stain/jena-fuseki
+#  container_name: jena-fuseki
+#  ports:
+#    - "3030:3030"
+
+
+
+#storage:
+#  image: busybox
+#  volumes:
+#    - /var/lib/docker/storage
+#  command: true
+
+#haproxy:
+#  build: .
+#  command: .
+#  hostname: active-proxy
+#  volumes:
+#    - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+#  ports:
+#    - "80:80"
+
+#nginx:
+#  image: nginx
+#  ports: 80:80

@@ -1,0 +1,15 @@
+web:
+  extends:
+    file: compose_default.yml
+    service: web
+  links:
+    - db:db
+  environment:
+    #- SOLR_ENDPOINT=http://adw-pub.tc.sub.uni-goettingen.de/edfu/edfu_core
+    - DOCKER_ENV=production
+    - RAILS_ENV=production
+
+db:
+  extends:
+    file: compose_default.yml
+    service: db
