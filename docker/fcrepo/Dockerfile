@@ -4,58 +4,66 @@ FROM jetty:9.3-jre8
 MAINTAINER  Jörg Panzer, SUB
 
 
-#ENV FCREPO_GIT  https://github.com/fcrepo4/fcrepo4.git
-
-#ENV MAVEN_OPTS  "-Xmx1024m" -XX:MaxMetaspaceSize=1024m"
-#ENV MAVEN_VERSION 3.3.3
-#ENV MAVEN_HOME /usr/share/maven
-#ENV PATH "$PATH:$MAVEN_HOME/bin"
-
 ENV JRE_HOME         /usr
 
-#RUN apt-get update && \
-#    apt-get -y install --no-install-recommends  git  curl
+ENV FEDORA_VERSION 4.5.0
+ENV FEDORA_TAG 4.5.0
 
-# install maven
-#RUN curl -fsSL http://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz | tar xzf - -C /usr/share \
-#    && mv /usr/share/apache-maven-$MAVEN_VERSION /usr/share/maven \
-#    && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
+ENV FCREPO_USER docker
+ENV FCREPO_UID 8080
 
-
-# Install Fedora4
-#ENV FEDORA_VERSION 4.5.0
-#ENV FEDORA_TAG 4.5.0
-
-#WORKDIR /
-#RUN git clone $FCREPO_GIT
+ENV KARAF_VERSION 4.0.1
 
 
-#WORKDIR /fcrepo4
 
-# build all and install it to the local maven repo
-# RUN mvn install
-# RUN mvn install -DskipTests                # todo remove flag skip tests
+# ---------------------
+#
 
-# build the module fcrepo-webapp (pl for projects) and required modules (am for also-make)
-#RUN mvn install -pl fcrepo-webapp -am
+RUN apt-get update && \
+    apt-get -y install --no-install-recommends  git  curl
+
+RUN groupadd -r $FCREPO_USER && \
+  useradd -r -u $FCREPO_UID -g $FCREPO_USER $FCREPO_USER
 
 
-# just package the war but do not install anything in your local repository
-#RUN mvn package -pl fcrepo-webapp -am
 
 # todo ensure jetty/fedora is not running under root
 
+
+#----------------
+# Install Fedora4
+
+WORKDIR /tmp
+RUN mkdir -p /var/lib/jetty/webapps
+RUN curl -fSL https://github.com/fcrepo4/fcrepo4/releases/download/fcrepo-$FEDORA_TAG/fcrepo-webapp-$FEDORA_VERSION.war -o fcrepo.war \
+	&& cp fcrepo.war /usr/local/jetty/webapps/fcrepo.war
+
+
+#---------------------
+# Install Apache Karaf   (see: https://hub.docker.com/r/yinlinchen/fcrepo4-docker/)
+
+
+RUN cd /tmp \
+	&& curl -fSL http://mirror.csclub.uwaterloo.ca/apache/karaf/$KARAF_VERSION/apache-karaf-$KARAF_VERSION.tar.gz -o apache-karaf-$KARAF_VERSION.tar.gz \
+	&& tar -xzf apache-karaf-$KARAF_VERSION.tar.gz \
+	&& mv /tmp/apache-karaf-$KARAF_VERSION /opt \
+	&& ln -s /opt/apache-karaf-$KARAF_VERSION /opt/karaf \
+	&& rm apache-karaf-$KARAF_VERSION.tar.gz*
+
+
+#---------------------
+# Fedora Camel Toolbox
+COPY scripts/fedora_camel_toolbox.script /fcrepo_config/
+COPY scripts/fedora_camel_toolbox.sh /fcrepo_config/
+COPY scripts/runall.sh /fcrepo_config/
+
+
+
+#------------
+# start jetty
+CMD [ "sh", "/fcrepo_config/runall.sh"]
+
+
+
 #WORKDIR /fcrepo4/fcrepo-webapp/target/
 #CMD ["mvn", "jetty:run"]
-
-
-
-
-# WORKDIR /
-# RUN git clone $FCREPO_GIT
-# WORKDIR /fcrepo4
-# RUN mvn package -pl fcrepo-webapp -am
-# RUN mv /fcrepo4/fcrepo-webapp/target/fcrepo-webapp-4.5.1-SNAPSHOT.war /var/lib/jetty/webapps/fcrepo-webapp.war
-
-WORKDIR /var/lib/jetty/webapps
-CMD ["java","-Djava.io.tmpdir=/tmp/jetty","-jar","/usr/local/jetty/start.jar"]
