@@ -39,20 +39,17 @@ RUN groupadd -r $FCREPO_USER && \
 
 RUN sed -i '$i<role rolename="fedoraUser"/>$i<role rolename="fedoraAdmin"/>$i<role rolename="manager-gui"/>$i<user username="testuser" password="password1" roles="fedoraUser"/>$i<user username="adminuser" password="password2" roles="fedoraUser"/>$i<user username="fedoraAdmin" password="fedoraAdmin" roles="fedoraAdmin"/>$i<user username="fedora4" password="fedora4" roles="manager-gui"/>'  $CATALINA_HOME/conf/tomcat-users.xml
 
-# todo ensure jetty/fedora is not running under root
+# todo ensure tomcat/fedora is not running under root
 
 
 #--------------
 # install maven
 
-# todo uncomment and remove the current curl (apache archive is down for maintenance)
-#RUN curl -fsSL http://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz | tar xzf - -C /usr/share \
-#    && mv /usr/share/apache-maven-$MAVEN_VERSION /usr/share/maven \
-#    && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
 
-RUN curl -fsSL http://mirror.dkd.de/apache/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz | tar xzf - -C /usr/share \
+RUN curl -fsSL http://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz | tar xzf - -C /usr/share \
     && mv /usr/share/apache-maven-$MAVEN_VERSION /usr/share/maven \
     && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
+
 
 
 #----------------
