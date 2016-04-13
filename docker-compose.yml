@@ -20,14 +20,14 @@ services:
       - "8080:8080"
       - "9080:9080"
     volumes:
-      - ./data/fcrepo/:/usr/local/jetty/fcrepo4-data/  # todo data dir (storage)
+      - ./data/fcrepo/:/var/lib/tomcat/fcrepo4-data  # todo data dir (storage)
       #- ./build/fcrepo/:/var/lib/jetty/webapps/   # or /usr/local/jetty/webapps/fcrepo.war
       #- ./build/fcrepo/fcrepo-webapp.war:/var/lib/jetty/webapps/fcrepo.war   # or /usr/local/jetty/webapps/fcrepo.war
     links:
       - redis
       - solr
       - fuseki
-    user: docker:docker
+    #user: docker:docker
 
 
   # builds the fcrepo repo war, which can be reused from the fcrepo service
