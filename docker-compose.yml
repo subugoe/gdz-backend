@@ -8,11 +8,11 @@ services:
   #     Apache Karaf, Apache Camel
   fcrepo:
     build: docker/fcrepo/
-    working_dir: /usr/local/jetty
+    working_dir: /usr/local/tomcat
     container_name: fcrepo
     restart: always
     depends_on:
-    #  - fcrepo_build
+      #- fcrepo_build
       - fuseki
       - solr
       - redis
