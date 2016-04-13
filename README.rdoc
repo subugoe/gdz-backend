@@ -19,10 +19,14 @@
 * the fedora build takes a lot of time, to optimize this jump to the following section "faster build"
 * docker-compose build
 * docker-compose up -d
-* docker-compose scale worker=5            # to star 4 additional worker instances (services)
+* docker-compose scale worker=5             # to star 4 additional worker instances (services)
 * check: docker ps
-* http://127.0.0.1
-* http://127.0.0.1:8983
-* http://127.0.0.1:3030
-* http://127.0.0.1:3000/sidekiq
+
+* http://127.0.0.1                          # Blacklight
+* http://127.0.0.1/sidekiq                  # sidekiq joblist
+
+* http://127.0.0.1:8080                     # Fedora
+
+* http://127.0.0.1:8983                     # solr
+* http://127.0.0.1:3030                     # fuseki triplestore
 
