@@ -9,7 +9,6 @@ class BibliographicWork < ActiveFedora::Base
     index.as :stored_searchable
   end
 
-
   property :creator, predicate: ::RDF::Vocab::DC.creator, multiple: false do |index|
     index.as :stored_searchable
   end
@@ -23,7 +22,7 @@ class BibliographicWork < ActiveFedora::Base
     index.as :stored_searchable
   end
 
-  property :identifier, predicate: ::RDF::Vocab::MODS.identifier, multiple: false do |index|
+  property :identifiers, predicate: ::RDF::Vocab::MODS.identifier, multiple: true do |index|
     index.as :stored_searchable
   end
 
@@ -31,7 +30,7 @@ class BibliographicWork < ActiveFedora::Base
     index.as :stored_searchable
   end
 
-  property :classification, predicate: ::RDF::Vocab::MODS.classification, multiple: false do |index|
+  property :classifications, predicate: ::RDF::Vocab::MODS.classification, multiple: true do |index|
     index.as :stored_searchable
   end
 
@@ -66,6 +65,7 @@ class BibliographicWork < ActiveFedora::Base
     index.as :stored_searchable
   end
 
+  # todo destroy from related object
   def destroy_from_related_object
 
   end

@@ -15,6 +15,10 @@ class PageFileSet < ActiveFedora::Base
   end
 
 
+  property :recordIdentifier, predicate: ::RDF::Vocab::MODS.recordIdentifier, multiple: false do |index|
+    index.as :stored_searchable
+  end
+
   def page?
     true
   end

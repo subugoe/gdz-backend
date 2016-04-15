@@ -48,10 +48,11 @@ end
 # --- gdz additions ---
 gem 'therubyracer', platforms: :ruby
 gem 'hydra', '9.1.0'
-gem 'hydra-works', '0.7.0'    
+gem 'hydra-works', '0.7.0'
 
 
-
+# passenger app server
+gem "passenger"
 
 
 group :development, :test do
@@ -72,5 +73,31 @@ end
 
 
 # --- gdz additions ---
+#gem 'rdfs'
 gem 'rdf-vocab'
+
+=begin
+gem 'rdfs'
+gem 'sparql-client'
+gem 'sparql'
+gem 'rdf-xsd'
+gem 'rdf-trix'
+gem 'rdf-turtle'
+gem 'rdf-trig'
+gem 'rdf-tabular'
+gem 'rdf-rdfxml'
+gem 'rdf-reasoner'
+gem 'rdf-rdfa'
+gem 'rdf-n3'
+gem 'rdf-microdata'
+gem 'rdf-json'
+gem 'rdf-isomorphic'
+gem 'rdf-aggregate-repo'
+gem 'rdf'
+=end
+
 gem 'oai'
+gem 'sidekiq'
+gem 'redis-namespace', '~> 1.5', '>= 1.5.2'
+gem 'sinatra', '>= 1.3.0', require: nil
+gem 'redis-semaphore'

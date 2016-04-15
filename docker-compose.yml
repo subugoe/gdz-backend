@@ -1,0 +1,183 @@
+version: '2'
+
+services:
+
+  #   see: https://hub.docker.com/r/yinlinchen/fcrepo4-docker/
+  #   contains:
+  #     Fedora (...:8080/fcrepo)
+  #     Apache Karaf, Apache Camel
+  fcrepo:
+    build: docker/fcrepo/
+    working_dir: /usr/local/tomcat
+    container_name: fcrepo
+    restart: always
+    depends_on:
+      #- fcrepo_build
+      - fuseki
+      - solr
+      - redis
+    ports:
+      - "8080:8080"
+      - "9080:9080"
+    volumes:
+      - ./data/fcrepo/:/var/lib/tomcat/fcrepo4-data  # todo data dir (storage)
+      #- ./build/fcrepo/:/var/lib/jetty/webapps/   # or /usr/local/jetty/webapps/fcrepo.war
+      #- ./build/fcrepo/fcrepo-webapp.war:/var/lib/jetty/webapps/fcrepo.war   # or /usr/local/jetty/webapps/fcrepo.war
+    links:
+      - redis
+      - solr
+      - fuseki
+    #user: docker:docker
+
+
+  # builds the fcrepo repo war, which can be reused from the fcrepo service
+  # the idea behind this service is to separate the build and runtime environment
+#  fcrepo_build:
+#    build: docker/fcrepo_build/
+#    container_name: fcrepo_build
+#    command: sleep 360
+#    volumes:
+#      - ./build/fcrepo/:/fcrepo/
+#    environment:
+#      FEDORA_VERSION: 4.5.0
+#    user: docker:docker
+
+
+  #   Solr (...:8983/solr)
+  #   based on: https://github.com/docker-solr/docker-solr/blob/2e1ccd64970c65e7dacfe33203963b315f665cc3/5.5/Dockerfile
+  solr:
+    #image: solr:5.5
+    build: docker/solr/
+    container_name: solr
+    restart: always
+    #command: bin/solr create_core -c gdz   # or via entrypoint.sh
+    ports:
+      - "8983:8983"
+    environment:
+      SOLR_VERSION: 5.5
+      SOLR_HOME: /opt/solr/
+      JAVA_OPTS: "-server -Xms512M -Xmx1792M -XX:MaxPermSize=768M"
+    #user: docker:docker
+    #  volumes:   # todo data dir (storage)
+  #    - /opt/solr/gdz/data/
+
+
+  #   Fuseki (...:3030/fuseki)
+  #   admin password will be generated on first start-up (see the logs)
+  fuseki:
+    image: stain/jena-fuseki
+    container_name: fuseki
+    restart: always
+    ports:
+      - "3030:3030"
+    volumes:
+      - ./data/fuseki/:/usr/local/jetty/fcrepo4-data/  # todo data dir (storage)
+    #user: docker:docker
+
+
+  redis:
+    image: redis
+    command: redis-server --appendonly yes
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    #volumes:   # todo data dir (storage)
+    # - ...
+    #user: docker:docker
+
+
+  web:
+    build: .
+    command: bundle exec passenger start --port 3000
+    container_name: web
+    restart: always
+    links:
+      - redis:redis
+      - fcrepo:fcrepo
+    volumes:
+      - .:/web
+    ports:
+      - "80:3000"
+    #user: docker:docker
+
+
+  # for optimization start more then one instance of the node running the background processing (via docker swarm or kubernetes)
+  worker:
+    build: .
+    command: bundle exec sidekiq -q mets,8 -q collection,5 -q fileset,5
+    # container_name: worker    # you cannot scale a service beyond 1 container if you have specified a custom name (container names must be unique)
+    restart: always
+    links:
+      - redis:redis
+      - fcrepo:fcrepo
+    volumes:
+      - .:/web
+    #ports:
+      #  - "3001"
+    #user: docker:docker
+
+
+#worker_2:
+#  build: .
+#  command: bundle exec sidekiq -q mets,8 -q collection,5 -q fileset,5
+#  container_name: worker_2
+#  restart: always
+#  links:
+#    - redis:redis
+#    - fcrepo:fcrepo
+#  volumes:
+#    - .:/web
+#
+#worker_3:
+#  build: .
+#  command: bundle exec sidekiq -q mets,8 -q collection,5 -q fileset,5
+#  container_name: worker_3
+#  restart: always
+#  links:
+#    - redis:redis
+#    - fcrepo:fcrepo
+#  volumes:
+#    - .:/web
+#
+#worker_4:
+#  build: .
+#  command: bundle exec sidekiq -q mets,8 -q collection,5 -q fileset,5
+#  container_name: worker_4
+#  restart: always
+#  links:
+#    - redis:redis
+#    - fcrepo:fcrepo
+#  volumes:
+#    - .:/web
+#
+#worker_5:
+#  build: .
+#  command: bundle exec sidekiq -q mets,8 -q collection,5 -q fileset,5
+#  container_name: worker_5
+#  restart: always
+#  links:
+#    - redis:redis
+#    - fcrepo:fcrepo
+#  volumes:
+#    - .:/web
+
+
+#storage:
+#  image: busybox
+#  volumes:
+#    - /var/lib/docker/storage
+#  command: true
+
+#haproxy:
+#  build: .
+#  command: .
+#  hostname: active-proxy
+#  volumes:
+#    - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+#  ports:
+#    - "80:80"
+
+#nginx:
+#  image: nginx
+#  ports: 80:80
