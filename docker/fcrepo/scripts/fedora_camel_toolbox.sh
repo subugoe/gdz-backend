@@ -41,7 +41,7 @@ fi
 sed -i 's|fcrepo.authUsername=$|fcrepo.authUsername=fedoraAdmin|' /opt/karaf/etc/org.fcrepo.camel.indexing.triplestore.cfg
 sed -i 's|fcrepo.authPassword=$|fcrepo.authPassword=secret3|' /opt/karaf/etc/org.fcrepo.camel.indexing.triplestore.cfg
 sed -i 's|fcrepo.baseUrl=localhost:8080/fcrepo/rest|fcrepo.baseUrl=fcrepo:8080/fcrepo/rest|' /opt/karaf/etc/org.fcrepo.camel.indexing.triplestore.cfg
-sed -i 's|triplestore.baseUrl=localhost:8080/fuseki/test/update|triplestore.baseUrl=fuseki:8080/fuseki|' /opt/karaf/etc/org.fcrepo.camel.indexing.triplestore.cfg   # todo possibly triplestore.baseUrl=fuseki:8080/fuseki/test/update
+sed -i 's|triplestore.baseUrl=localhost:8080/fuseki/test/update|triplestore.baseUrl=fuseki:3030/fuseki|' /opt/karaf/etc/org.fcrepo.camel.indexing.triplestore.cfg   # todo possibly triplestore.baseUrl=fuseki:8080/fuseki/test/update
 
 
 sleep 5
@@ -56,7 +56,7 @@ if [ ! -f "/opt/karaf/etc/org.fcrepo.camel.audit.cfg" ]; then
 else
    echo "auditing cfg exists"
 fi
-sed -i 's|triplestore.baseUrl=localhost:8080/fuseki/test/update|triplestore.baseUrl=fuseki:8080/fuseki|' /opt/karaf/etc/org.fcrepo.camel.audit.cfg
+sed -i 's|triplestore.baseUrl=localhost:8080/fuseki/test/update|triplestore.baseUrl=fuseki:3030/fuseki|' /opt/karaf/etc/org.fcrepo.camel.audit.cfg
 sed -i 's|event.baseUri=http://example.com/event|event.baseUri=http://gdz.sub.uni-goettingen.de/fedora_event|' /opt/karaf/etc/org.fcrepo.camel.audit.cfg
 
 
