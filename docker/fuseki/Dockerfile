@@ -30,11 +30,20 @@ ENV FUSEKI_SHA1 ba7aea73f27a735489fb84ec0c7894a53bdc34f9
 ENV FUSEKI_VERSION 2.3.1
 ENV FUSEKI_MIRROR http://www.eu.apache.org/dist/
 ENV FUSEKI_ARCHIVE http://archive.apache.org/dist/
-#
+
 
 # Config and data
 VOLUME /fuseki
 ENV FUSEKI_BASE /fuseki
+
+
+# 999(docker)
+ENV FUSEKI_USER docker
+ENV FUSEKI_UID 1000
+
+
+#RUN groupadd -r $FUSEKI_USER  && \
+##  useradd -r -u $FUSEKI_UID  $FUSEKI_USER
 
 
 # Installation folder
@@ -67,8 +76,14 @@ RUN chmod 755 /jena-fuseki/load.sh /jena-fuseki/tdbloader
 #VOLUME /staging
 
 
+
+/fuseki/databases/
+RUN chown -R $FUSEKI_UID /opt/solr
+
+
 # Where we start our server from
 WORKDIR /jena-fuseki
 EXPOSE 3030
 ENTRYPOINT ["/docker-entrypoint.sh"]
+USER $FUSEKI_UID
 CMD ["/jena-fuseki/fuseki-server"]
