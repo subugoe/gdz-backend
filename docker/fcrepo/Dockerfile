@@ -9,8 +9,9 @@ ENV JRE_HOME         /usr
 ENV FEDORA_VERSION 4.4.0
 ENV FEDORA_TAG 4.4.0
 
+# 999(docker)
 ENV FCREPO_USER docker
-ENV FCREPO_UID 8080
+ENV FCREPO_UID 1000
 
 ENV KARAF_VERSION 4.0.1
 
@@ -31,11 +32,9 @@ RUN apt-get update && \
     apt-get -y install --no-install-recommends  git  curl
 
 
+#RUN groupadd -r $FCREPO_USER && \
+#  useradd -r -u $FCREPO_UID  $FCREPO_USER
 
-RUN groupadd -r $FCREPO_USER && \
-  useradd -r -u $FCREPO_UID -g $FCREPO_USER $FCREPO_USER
-
-# USER $FCREPO_USER
 
 RUN sed -i '$i<role rolename="fedoraUser"/>$i<role rolename="fedoraAdmin"/>$i<role rolename="manager-gui"/>$i<user username="testuser" password="password1" roles="fedoraUser"/>$i<user username="adminuser" password="password2" roles="fedoraUser"/>$i<user username="fedoraAdmin" password="fedoraAdmin" roles="fedoraAdmin"/>$i<user username="fedora4" password="fedora4" roles="manager-gui"/>'  $CATALINA_HOME/conf/tomcat-users.xml
 
@@ -57,43 +56,44 @@ RUN curl -fsSL http://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binar
 
 WORKDIR /tmp
 RUN curl -fSL https://github.com/fcrepo4/fcrepo4/releases/download/fcrepo-$FEDORA_TAG/fcrepo-webapp-$FEDORA_VERSION.war -o fcrepo.war
-RUN mkdir -p /var/lib/tomcat/fcrepo4-data \
-#	&& chown -hR $FCREPO_USER:$FCREPO_USER /var/lib/tomcat/fcrepo4-data \
-#	&& chmod g-w /var/lib/tomcat/fcrepo4-data \
-	&& cp fcrepo.war /usr/local/tomcat/webapps/fcrepo.war
-#   && chown -hR $FCREPO_USER:$FCREPO_USER /usr/local/tomcat/webapps/fcrepo.war
+RUN mkdir -p /var/lib/tomcat/fcrepo4-data
+	#&& chown -hR $FCREPO_UID /var/lib/tomcat/fcrepo4-data \
+	#&& chmod g-w /var/lib/tomcat/fcrepo4-data \
+
+RUN cp fcrepo.war /usr/local/tomcat/webapps/fcrepo.war
+#   && chown -hR $FCREPO_UID /usr/local/tomcat/webapps/fcrepo.war
 
 
 #---------------------
 # Install Apache Karaf   (see: https://hub.docker.com/r/yinlinchen/fcrepo4-docker/)
 
 
-RUN cd /tmp \
-	&& curl -fSL http://mirror.csclub.uwaterloo.ca/apache/karaf/$KARAF_VERSION/apache-karaf-$KARAF_VERSION.tar.gz -o apache-karaf-$KARAF_VERSION.tar.gz \
-	&& tar -xzf apache-karaf-$KARAF_VERSION.tar.gz \
-	&& mv /tmp/apache-karaf-$KARAF_VERSION /opt \
-	&& ln -s /opt/apache-karaf-$KARAF_VERSION /opt/karaf \
-	&& rm apache-karaf-$KARAF_VERSION.tar.gz*
+#RUN cd /tmp \
+#	&& curl -fSL http://mirror.csclub.uwaterloo.ca/apache/karaf/$KARAF_VERSION/apache-karaf-$KARAF_VERSION.tar.gz -o apache-karaf-$KARAF_VERSION.tar.gz \
+#	&& tar -xzf apache-karaf-$KARAF_VERSION.tar.gz \
+#	&& mv /tmp/apache-karaf-$KARAF_VERSION /opt \
+#	&& ln -s /opt/apache-karaf-$KARAF_VERSION /opt/karaf \
+#	&& rm apache-karaf-$KARAF_VERSION.tar.gz*
 
 
 #---------------------
 # Fedora Camel Toolbox
-COPY scripts/fedora_camel_toolbox.script /fcrepo_config/
-COPY scripts/fedora_camel_toolbox.sh /fcrepo_config/
-COPY scripts/runall.sh /fcrepo_config/
+#COPY scripts/fedora_camel_toolbox.script /fcrepo_config/
+#COPY scripts/fedora_camel_toolbox.sh /fcrepo_config/
+#COPY scripts/runall.sh /fcrepo_config/
 
 #-----------------------
 # build and add features
-RUN cd /usr/local/tomcat
-#    && chown -R $FCREPO_USER:$FCREPO_USER bin webapps temp logs work conf \
+#RUN cd /usr/local/tomcat \
+#    && chown -R $FCREPO_UID bin webapps temp logs work conf \
 #    && chmod -R 750 bin webapps temp logs work conf
 
 
 
-#RUN chown -R $FCREPO_USER:$FCREPO_USER /opt/karaf \
-#    && chmod -R 775 /opt/karaf/etc \
-#    && chown -R $FCREPO_USER:$FCREPO_USER /opt/apache-karaf-$KARAF_VERSION \
-#    && chmod -R 775 /opt/apache-karaf-$KARAF_VERSION/etc
+#RUN chown -R $FCREPO_UID /opt/karaf \
+#    && chmod -R 750 /opt/karaf/etc \
+#    && chown -R $FCREPO_UID /opt/apache-karaf-$KARAF_VERSION \
+#    && chmod -R 750 /opt/apache-karaf-$KARAF_VERSION/etc
 
 
 
@@ -101,5 +101,7 @@ RUN cd /usr/local/tomcat
 # start tomcat
 
 WORKDIR $CATALINA_HOME
-CMD [ "sh", "/fcrepo_config/runall.sh"]
+USER $FCREPO_UID
+#CMD [ "sh", "/fcrepo_config/runall.sh"]
 
+CMD ["/usr/local/tomcat/bin/catalina.sh", "run"]
