@@ -21,13 +21,10 @@ services:
       - "9080:9080"
     volumes:
       - ./data/fcrepo/:/var/lib/tomcat/fcrepo4-data  # todo data dir (storage)
-      #- ./build/fcrepo/:/var/lib/jetty/webapps/   # or /usr/local/jetty/webapps/fcrepo.war
-      #- ./build/fcrepo/fcrepo-webapp.war:/var/lib/jetty/webapps/fcrepo.war   # or /usr/local/jetty/webapps/fcrepo.war
     links:
       - redis
       - solr
       - fuseki
-    #user: docker:docker
 
 
   # builds the fcrepo repo war, which can be reused from the fcrepo service
@@ -50,16 +47,14 @@ services:
     build: docker/solr/
     container_name: solr
     restart: always
-    #command: bin/solr create_core -c gdz   # or via entrypoint.sh
     ports:
       - "8983:8983"
     environment:
       SOLR_VERSION: 5.5
       SOLR_HOME: /opt/solr/
       JAVA_OPTS: "-server -Xms512M -Xmx1792M -XX:MaxPermSize=768M"
-    #user: docker:docker
-    #  volumes:   # todo data dir (storage)
-  #    - /opt/solr/gdz/data/
+    volumes:   # todo data dir (storage)
+      - ./data/solr/:/opt/solr/gdz/data/
 
 
   #   Fuseki (...:3030/fuseki)
@@ -70,9 +65,9 @@ services:
     restart: always
     ports:
       - "3030:3030"
+    user: $UID
     volumes:
-      - ./data/fuseki/:/usr/local/jetty/fcrepo4-data/  # todo data dir (storage)
-    #user: docker:docker
+      - ./data/fuseki/:/fuseki/databases/  # todo data dir (storage)
 
 
   redis:
@@ -84,7 +79,6 @@ services:
       - "6379:6379"
     #volumes:   # todo data dir (storage)
     # - ...
-    #user: docker:docker
 
 
   web:
@@ -99,7 +93,6 @@ services:
       - .:/web
     ports:
       - "80:3000"
-    #user: docker:docker
 
 
   # for optimization start more then one instance of the node running the background processing (via docker swarm or kubernetes)
@@ -115,7 +108,6 @@ services:
       - .:/web
     #ports:
       #  - "3001"
-    #user: docker:docker
 
 
 #worker_2:
