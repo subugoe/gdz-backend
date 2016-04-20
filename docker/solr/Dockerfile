@@ -5,11 +5,15 @@ RUN apt-get update && \
   apt-get -y install  lsof  vim && \
     rm -rf /var/lib/apt/lists/*
 
-ENV SOLR_USER solr
-ENV SOLR_UID 8983
 
-RUN groupadd -r $SOLR_USER && \
-  useradd -r -u $SOLR_UID -g $SOLR_USER $SOLR_USER
+# 999(docker)
+ENV SOLR_USER docker
+ENV SOLR_UID 1000
+
+
+#RUN groupadd -r $SOLR_USER  && \
+##  useradd -r -u $SOLR_UID $SOLR_USER
+
 
 ENV SOLR_KEY 2C72EB1397733A551DDB60CCF119941F6E68DA61
 RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$SOLR_KEY"
@@ -17,7 +21,7 @@ RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$SOLR_KEY"
 ENV SOLR_VERSION 5.5.0
 ENV SOLR_SHA256 c5fa5cb996fe1432e09bb2f6053ffbeb095436db4a77e9c6488b531db726b04d
 
-RUN mkdir -p /opt/solr && \
+RUN mkdir -p /opt/solr/gdz/data && \
   wget -nv --output-document=/opt/solr.tgz http://archive.apache.org/dist/lucene/solr/$SOLR_VERSION/solr-$SOLR_VERSION.tgz && \
   wget -nv --output-document=/opt/solr.tgz.asc http://archive.apache.org/dist/lucene/solr/$SOLR_VERSION/solr-$SOLR_VERSION.tgz.asc && \
   gpg --verify /opt/solr.tgz.asc && \
@@ -38,10 +42,9 @@ COPY  config/sub/mapping-ISOLatin1Accent.txt /opt/solr/gdz/conf/mapping-ISOLatin
 COPY  config/schema.xml /opt/solr/gdz/conf/schema.xml
 COPY  config/solrconfig.xml /opt/solr/gdz/conf/solrconfig.xml
 
-RUN chown -R $SOLR_USER:$SOLR_USER /opt/solr
+RUN chown -R $SOLR_UID /opt/solr
 
-
-EXPOSE 8983
+#EXPOSE 8983
 WORKDIR /opt/solr
-USER $SOLR_USER
+USER $SOLR_UID
 CMD ["/opt/solr/bin/solr", "-f"]
