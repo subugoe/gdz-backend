@@ -6,10 +6,12 @@ MAINTAINER  Jörg Panzer, SUB
 
 ENV JRE_HOME         /usr
 
-ENV FEDORA_VERSION 4.4.0
-ENV FEDORA_TAG 4.4.0
 
-# 999(docker)
+ENV FEDORA_VERSION 4.5.0
+ENV FEDORA_TAG 4.5.0
+ENV FEDORA_HOME /var/lib/tomcat/fcrepo4-data
+
+
 ENV FCREPO_USER docker
 ENV FCREPO_UID 1000
 
@@ -25,43 +27,51 @@ ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
 
 
+
+
+
+ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.home=/var/lib/tomcat/fcrepo4-data"
+ENV JAVA_OPTS "${JAVA_OPTS} -Djava.io.tmpdir=tmp"
+ENV JAVA_OPTS "${JAVA_OPTS} -Dcom.arjuna.ats.arjuna.common.ObjectStoreEnvironmentBean.default.objectStoreDir=/var/lib/tomcat/fcrepo4-data/com.arjuna.ats.arjuna.common.ObjectStoreEnvironmentBean.default.objectStoreDir"
+ENV JAVA_OPTS "${JAVA_OPTS} -Dcom.arjuna.ats.arjuna.objectstore.objectStoreDir=/var/lib/tomcat/fcrepo4-data/com.arjuna.ats.arjuna.objectstore.objectStoreDir"
+ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.ispn.CacheDirPath=/var/lib/tomcat/fcrepo4-data/fcrepo.ispn.cache"
+ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.ispn.binary.CacheDirPath=/var/lib/tomcat/fcrepo4-data/fcrepo.ispn.binary.cache"
+ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.modeshape.index.location=/var/lib/tomcat/fcrepo4-data/index"
+ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.ispn.alternative.CacheDirPath=/var/lib/tomcat/fcrepo4-data/fcrepo.ispn.alternative.cache"
+ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.ispn.binary.alternative.CacheDirPath=/var/lib/tomcat/fcrepo4-data/fcrepo.ispn.binary.alternative.cache"
+
+
+
 # ---------------------
 #
 
 RUN apt-get update && \
-    apt-get -y install --no-install-recommends  git  curl
+    apt-get -y install --no-install-recommends  git  curl  vim
 
 
 #RUN groupadd -r $FCREPO_USER && \
 #  useradd -r -u $FCREPO_UID  $FCREPO_USER
 
 
-RUN sed -i '$i<role rolename="fedoraUser"/>$i<role rolename="fedoraAdmin"/>$i<role rolename="manager-gui"/>$i<user username="testuser" password="password1" roles="fedoraUser"/>$i<user username="adminuser" password="password2" roles="fedoraUser"/>$i<user username="fedoraAdmin" password="fedoraAdmin" roles="fedoraAdmin"/>$i<user username="fedora4" password="fedora4" roles="manager-gui"/>'  $CATALINA_HOME/conf/tomcat-users.xml
+#RUN sed -i '$i<role rolename="fedoraUser"/>$i<role rolename="fedoraAdmin"/>$i<role rolename="manager-gui"/>$i<user username="testuser" password="password1" roles="fedoraUser"/>$i<user username="adminuser" password="password2" roles="fedoraUser"/>$i<user username="fedoraAdmin" password="fedoraAdmin" roles="fedoraAdmin"/>$i<user username="fedora4" password="fedora4" roles="manager-gui"/>'  $CATALINA_HOME/conf/tomcat-users.xml
+RUN sed -i '$i<Resources cachingAllowed="true" cacheMaxSize="100000" />'  /usr/local/tomcat/conf/context.xml
+
+
 
 # todo ensure tomcat/fedora is not running under root
+
 
 
 #--------------
 # install maven
 
 
-RUN curl -fsSL http://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz | tar xzf - -C /usr/share \
-    && mv /usr/share/apache-maven-$MAVEN_VERSION /usr/share/maven \
-    && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
+#RUN curl -fsSL http://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz | tar xzf - -C /usr/share
+#RUN mv /usr/share/apache-maven-$MAVEN_VERSION /usr/share/maven
+#RUN ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
 
 
 
-#----------------
-# Install Fedora4
-
-WORKDIR /tmp
-RUN curl -fSL https://github.com/fcrepo4/fcrepo4/releases/download/fcrepo-$FEDORA_TAG/fcrepo-webapp-$FEDORA_VERSION.war -o fcrepo.war
-RUN mkdir -p /var/lib/tomcat/fcrepo4-data
-	#&& chown -hR $FCREPO_UID /var/lib/tomcat/fcrepo4-data \
-	#&& chmod g-w /var/lib/tomcat/fcrepo4-data \
-
-RUN cp fcrepo.war /usr/local/tomcat/webapps/fcrepo.war
-#   && chown -hR $FCREPO_UID /usr/local/tomcat/webapps/fcrepo.war
 
 
 #---------------------
@@ -76,32 +86,31 @@ RUN cp fcrepo.war /usr/local/tomcat/webapps/fcrepo.war
 #	&& rm apache-karaf-$KARAF_VERSION.tar.gz*
 
 
-#---------------------
-# Fedora Camel Toolbox
-#COPY scripts/fedora_camel_toolbox.script /fcrepo_config/
-#COPY scripts/fedora_camel_toolbox.sh /fcrepo_config/
-#COPY scripts/runall.sh /fcrepo_config/
-
-#-----------------------
-# build and add features
-#RUN cd /usr/local/tomcat \
-#    && chown -R $FCREPO_UID bin webapps temp logs work conf \
-#    && chmod -R 750 bin webapps temp logs work conf
-
-
-
-#RUN chown -R $FCREPO_UID /opt/karaf \
+#RUN chown -R $FCREPO_UID /opt/karaf
+#    && chown -R $FCREPO_UID /opt/apache-karaf-$KARAF_VERSION
 #    && chmod -R 750 /opt/karaf/etc \
-#    && chown -R $FCREPO_UID /opt/apache-karaf-$KARAF_VERSION \
 #    && chmod -R 750 /opt/apache-karaf-$KARAF_VERSION/etc
 
 
 
+
+
+
+WORKDIR $CATALINA_HOME
+
 #------------
 # start tomcat
 
-WORKDIR $CATALINA_HOME
-USER $FCREPO_UID
+
+#USER $FCREPO_UID
 #CMD [ "sh", "/fcrepo_config/runall.sh"]
 
-CMD ["/usr/local/tomcat/bin/catalina.sh", "run"]
+
+
+
+#CMD ["/usr/local/tomcat/bin/catalina.sh", "run"]
+
+
+COPY entrypoint.sh entrypoint.sh
+COPY scripts/tomcat-users.xml tomcat-users.xml
+ENTRYPOINT ["sh", "entrypoint.sh"]

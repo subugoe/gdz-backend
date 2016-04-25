@@ -11,6 +11,7 @@ services:
     working_dir: /usr/local/tomcat
     container_name: fcrepo
     restart: always
+    #command: sleep 6000
     depends_on:
       #- fcrepo_build
       - fuseki
@@ -65,7 +66,7 @@ services:
     restart: always
     ports:
       - "3030:3030"
-    user: $UID
+    #user: $UID
     volumes:
       - ./data/fuseki/:/fuseki/databases/  # todo data dir (storage)
 
