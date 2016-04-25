@@ -4,8 +4,6 @@ FROM tomcat:8.5
 MAINTAINER  Jörg Panzer, SUB
 
 
-ENV JRE_HOME         /usr
-
 
 ENV FEDORA_VERSION 4.5.0
 ENV FEDORA_TAG 4.5.0
@@ -53,12 +51,74 @@ RUN apt-get update && \
 #  useradd -r -u $FCREPO_UID  $FCREPO_USER
 
 
+
+
 #RUN sed -i '$i<role rolename="fedoraUser"/>$i<role rolename="fedoraAdmin"/>$i<role rolename="manager-gui"/>$i<user username="testuser" password="password1" roles="fedoraUser"/>$i<user username="adminuser" password="password2" roles="fedoraUser"/>$i<user username="fedoraAdmin" password="fedoraAdmin" roles="fedoraAdmin"/>$i<user username="fedora4" password="fedora4" roles="manager-gui"/>'  $CATALINA_HOME/conf/tomcat-users.xml
 RUN sed -i '$i<Resources cachingAllowed="true" cacheMaxSize="100000" />'  /usr/local/tomcat/conf/context.xml
 
 
 
+
+
+
 # todo ensure tomcat/fedora is not running under root
+
+
+
+#--------------
+# install fedora
+
+
+COPY scripts/tomcat-users.xml /usr/local/tomcat/conf/tomcat-users.xml
+
+
+
+#----------------
+# Install Fedora4
+
+WORKDIR /tmp
+RUN curl -fSL https://github.com/fcrepo4/fcrepo4/releases/download/fcrepo-$FEDORA_TAG/fcrepo-webapp-$FEDORA_VERSION.war -o fcrepo.war
+
+RUN mkdir -p /var/lib/tomcat/fcrepo4-data
+RUN chown -R $FCREPO_UID /var/lib/tomcat/fcrepo4-data
+
+#	&& chmod g-w /var/lib/tomcat/fcrepo4-data
+
+
+
+RUN cp fcrepo.war /usr/local/tomcat/webapps/fcrepo.war
+RUN chown $FCREPO_UID /usr/local/tomcat/webapps/fcrepo.war
+
+
+
+#---------------------
+# Fedora Camel Toolbox
+#COPY scripts/fedora_camel_toolbox.script /fcrepo_config/
+#COPY scripts/fedora_camel_toolbox.sh /fcrepo_config/
+#COPY scripts/runall.sh /fcrepo_config/
+
+#-----------------------
+# build and add features
+WORKDIR /usr/local/tomcat
+RUN chown -R $FCREPO_UID bin webapps temp logs work conf
+  #  #&& chmod -R 300 bin webapps temp logs work conf
+
+RUN mkdir -p /usr/local/tomcat/conf/Catalina/localhost
+RUN chown -R $FCREPO_UID /usr/local/tomcat/conf/Catalina
+
+#RUN chmod -R 740 /usr/local/tomcat/conf/Catalina
+#RUN chmod -R +s /usr/local/tomcat/conf/Catalina
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -95,22 +155,26 @@ RUN sed -i '$i<Resources cachingAllowed="true" cacheMaxSize="100000" />'  /usr/l
 
 
 
+#---------------------
+# Fedora Camel Toolbox
+#COPY scripts/fedora_camel_toolbox.script /fcrepo_config/
+#COPY scripts/fedora_camel_toolbox.sh /fcrepo_config/
+#COPY scripts/runall.sh /fcrepo_config/
 
-WORKDIR $CATALINA_HOME
+
+
 
 #------------
 # start tomcat
 
 
-#USER $FCREPO_UID
+
+USER $FCREPO_UID
+
 #CMD [ "sh", "/fcrepo_config/runall.sh"]
+CMD ["/usr/local/tomcat/bin/catalina.sh", "run"]
 
 
-
-
-#CMD ["/usr/local/tomcat/bin/catalina.sh", "run"]
-
-
-COPY entrypoint.sh entrypoint.sh
-COPY scripts/tomcat-users.xml tomcat-users.xml
-ENTRYPOINT ["sh", "entrypoint.sh"]
+#COPY entrypoint.sh entrypoint.sh
+#COPY scripts/tomcat-users.xml tomcat-users.xml
+#ENTRYPOINT ["sh", "entrypoint.sh"]

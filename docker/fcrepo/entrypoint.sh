@@ -5,10 +5,10 @@
 mv /usr/local/tomcat/tomcat-users.xml /usr/local/tomcat/conf/tomcat-users.xml
 
 
-#/usr/local/tomcat/bin/catalina.sh run > /dev/null 2>&1 &
-/usr/local/tomcat/bin/catalina.sh run &
+/usr/local/tomcat/bin/catalina.sh run > /dev/null 2>&1 &
+#/usr/local/tomcat/bin/catalina.sh run &
 
-sleep 120
+sleep 600
 
 #----------------
 # Install Fedora4
