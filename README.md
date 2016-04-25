@@ -1,6 +1,6 @@
-== README ==
+## README ##
 
-=== without docker ===
+### without docker ###
 * start fedora
     * for test via: fcrepo_wrapper -p 8984
     * delet the fedora data dir and solr index, and restarts fedora (if the konfiguration is already running): ./cleanup.sh
@@ -15,7 +15,7 @@
     * bundle exec sidekiq -q mets,5 -q collection,2 -q biblfileset,2 -q pagefileset,2 -q metsfileset,2
 * begin import via: ruby ingest.rb
 
-=== with docker ===
+### with docker ###
 * the fedora build takes a lot of time, to optimize this jump to the following section "faster build"
 * docker-compose build
 * docker-compose up -d
