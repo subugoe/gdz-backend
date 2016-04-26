@@ -88,13 +88,13 @@ RUN mkdir -p /var/lib/tomcat/fcrepo4-data/index
 RUN mkdir -p /var/lib/tomcat/fcrepo4-data/fcrepo.ispn.alternative.cache
 RUN mkdir -p /var/lib/tomcat/fcrepo4-data/fcrepo.ispn.binary.alternative.cache
 
-RUN chown -R $FCREPO /var/lib/tomcat/fcrepo4-data
+RUN chown -R $FCREPO_USER /var/lib/tomcat/fcrepo4-data
 #RUN chmod -R 777 /var/lib/tomcat/fcrepo4-data
 
 
 
 RUN cp fcrepo.war /usr/local/tomcat/webapps/fcrepo.war
-RUN chown $FCREPO /usr/local/tomcat/webapps/fcrepo.war
+RUN chown $FCREPO_USER /usr/local/tomcat/webapps/fcrepo.war
 
 
 
@@ -107,14 +107,14 @@ RUN chown $FCREPO /usr/local/tomcat/webapps/fcrepo.war
 #-----------------------
 # build and add features
 WORKDIR /usr/local/tomcat
-RUN chown -R $FCREPO:root bin webapps temp logs work conf
+RUN chown -R $FCREPO_USER:$FCREPO_USER bin webapps temp logs work conf
   #  #&& chmod -R 300 bin webapps temp logs work conf
 
 
 #RUN mkdir -p /usr/local/tomcat/conf/Catalina/localhost
 #RUN chmod -R 777 /usr/local/tomcat/conf/Catalina
 
-#RUN chown -R $FCREPO:root /usr/local/tomcat/conf/Catalina
+#RUN chown -R $FCREPO_USER:$FCREPO_USER /usr/local/tomcat/conf/Catalina
 
 
 
