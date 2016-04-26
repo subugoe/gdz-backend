@@ -18,7 +18,7 @@
 ### with docker ###
 * docker-compose build
 * docker-compose up -d
-* docker-compose scale worker=5             # to star 4 additional worker instances (services)
+* docker-compose scale worker=5             # to start 4 additional worker instances (if required)
 * check: docker ps
 
 * http://127.0.0.1                          # Blacklight
