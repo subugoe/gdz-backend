@@ -1,4 +1,4 @@
-FROM tomcat:8.5
+FROM tomcat:8.0-jre8
 
 
 MAINTAINER  Jörg Panzer, SUB
@@ -40,6 +40,8 @@ ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.ispn.binary.alternative.CacheDirPath=/var/l
 
 
 
+
+
 # ---------------------
 #
 
@@ -47,15 +49,13 @@ RUN apt-get update && \
     apt-get -y install --no-install-recommends  git  curl  vim
 
 
-#RUN groupadd -r $FCREPO_USER && \
-#  useradd -r -u $FCREPO_UID  $FCREPO_USER
-
+RUN groupadd  $FCREPO_USER
+RUN useradd  -u $FCREPO_UID -g $FCREPO_USER $FCREPO_USER
 
 
 
 #RUN sed -i '$i<role rolename="fedoraUser"/>$i<role rolename="fedoraAdmin"/>$i<role rolename="manager-gui"/>$i<user username="testuser" password="password1" roles="fedoraUser"/>$i<user username="adminuser" password="password2" roles="fedoraUser"/>$i<user username="fedoraAdmin" password="fedoraAdmin" roles="fedoraAdmin"/>$i<user username="fedora4" password="fedora4" roles="manager-gui"/>'  $CATALINA_HOME/conf/tomcat-users.xml
 RUN sed -i '$i<Resources cachingAllowed="true" cacheMaxSize="100000" />'  /usr/local/tomcat/conf/context.xml
-
 
 
 
@@ -70,7 +70,7 @@ RUN sed -i '$i<Resources cachingAllowed="true" cacheMaxSize="100000" />'  /usr/l
 
 
 COPY scripts/tomcat-users.xml /usr/local/tomcat/conf/tomcat-users.xml
-
+#RUN chown -R $FCREPO_USER /var/lib/tomcat/fcrepo4-data
 
 
 #----------------
@@ -80,14 +80,21 @@ WORKDIR /tmp
 RUN curl -fSL https://github.com/fcrepo4/fcrepo4/releases/download/fcrepo-$FEDORA_TAG/fcrepo-webapp-$FEDORA_VERSION.war -o fcrepo.war
 
 RUN mkdir -p /var/lib/tomcat/fcrepo4-data
-RUN chown -R $FCREPO_UID /var/lib/tomcat/fcrepo4-data
+RUN mkdir -p /var/lib/tomcat/fcrepo4-data/com.arjuna.ats.arjuna.common.ObjectStoreEnvironmentBean.default.objectStoreDir
+RUN mkdir -p /var/lib/tomcat/fcrepo4-data/com.arjuna.ats.arjuna.objectstore.objectStoreDir
+RUN mkdir -p /var/lib/tomcat/fcrepo4-data/fcrepo.ispn.cache
+RUN mkdir -p /var/lib/tomcat/fcrepo4-data/fcrepo.ispn.binary.cache
+RUN mkdir -p /var/lib/tomcat/fcrepo4-data/index
+RUN mkdir -p /var/lib/tomcat/fcrepo4-data/fcrepo.ispn.alternative.cache
+RUN mkdir -p /var/lib/tomcat/fcrepo4-data/fcrepo.ispn.binary.alternative.cache
 
-#	&& chmod g-w /var/lib/tomcat/fcrepo4-data
+RUN chown -R $FCREPO /var/lib/tomcat/fcrepo4-data
+#RUN chmod -R 777 /var/lib/tomcat/fcrepo4-data
 
 
 
 RUN cp fcrepo.war /usr/local/tomcat/webapps/fcrepo.war
-RUN chown $FCREPO_UID /usr/local/tomcat/webapps/fcrepo.war
+RUN chown $FCREPO /usr/local/tomcat/webapps/fcrepo.war
 
 
 
@@ -100,15 +107,14 @@ RUN chown $FCREPO_UID /usr/local/tomcat/webapps/fcrepo.war
 #-----------------------
 # build and add features
 WORKDIR /usr/local/tomcat
-RUN chown -R $FCREPO_UID bin webapps temp logs work conf
+RUN chown -R $FCREPO:root bin webapps temp logs work conf
   #  #&& chmod -R 300 bin webapps temp logs work conf
 
-RUN mkdir -p /usr/local/tomcat/conf/Catalina/localhost
-RUN chown -R $FCREPO_UID /usr/local/tomcat/conf/Catalina
 
-#RUN chmod -R 740 /usr/local/tomcat/conf/Catalina
-#RUN chmod -R +s /usr/local/tomcat/conf/Catalina
+#RUN mkdir -p /usr/local/tomcat/conf/Catalina/localhost
+#RUN chmod -R 777 /usr/local/tomcat/conf/Catalina
 
+#RUN chown -R $FCREPO:root /usr/local/tomcat/conf/Catalina
 
 
 
@@ -146,8 +152,8 @@ RUN chown -R $FCREPO_UID /usr/local/tomcat/conf/Catalina
 #	&& rm apache-karaf-$KARAF_VERSION.tar.gz*
 
 
-#RUN chown -R $FCREPO_UID /opt/karaf
-#    && chown -R $FCREPO_UID /opt/apache-karaf-$KARAF_VERSION
+#RUN chown -R $FCREPO_UID:$FCREPO_UID /opt/karaf
+#    && chown -R $FCREPO_UID:$FCREPO_UID /opt/apache-karaf-$KARAF_VERSION
 #    && chmod -R 750 /opt/karaf/etc \
 #    && chmod -R 750 /opt/apache-karaf-$KARAF_VERSION/etc
 
@@ -169,10 +175,11 @@ RUN chown -R $FCREPO_UID /usr/local/tomcat/conf/Catalina
 
 
 
-USER $FCREPO_UID
+USER $FCREPO
+#USER $FCREPO_USER:$FCREPO_USER
 
 #CMD [ "sh", "/fcrepo_config/runall.sh"]
-CMD ["/usr/local/tomcat/bin/catalina.sh", "run"]
+CMD ["catalina.sh", "run"]
 
 
 #COPY entrypoint.sh entrypoint.sh
