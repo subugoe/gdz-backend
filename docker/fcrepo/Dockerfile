@@ -49,8 +49,8 @@ RUN apt-get update && \
     apt-get -y install --no-install-recommends  git  curl  vim
 
 
-RUN groupadd  $FCREPO_USER
-RUN useradd  -u $FCREPO_UID -g $FCREPO_USER $FCREPO_USER
+#RUN groupadd  $FCREPO_USER
+#RUN useradd  -u $FCREPO_UID -g $FCREPO_USER $FCREPO_USER
 
 
 

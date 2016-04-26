@@ -16,7 +16,6 @@
 * begin import via: ruby ingest.rb
 
 ### with docker ###
-* the fedora build takes a lot of time, to optimize this jump to the following section "faster build"
 * docker-compose build
 * docker-compose up -d
 * docker-compose scale worker=5             # to star 4 additional worker instances (services)
