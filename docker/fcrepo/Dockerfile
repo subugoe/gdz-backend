@@ -7,7 +7,7 @@ MAINTAINER  Jörg Panzer, SUB
 
 ENV FEDORA_VERSION 4.5.0
 ENV FEDORA_TAG 4.5.0
-ENV FEDORA_HOME /var/lib/tomcat/fcrepo4-data
+
 
 
 ENV FCREPO_USER docker
@@ -25,11 +25,17 @@ ENV CATALINA_HOME /usr/local/tomcat
 ENV PATH $CATALINA_HOME/bin:$PATH
 
 
-
-
-
 ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.home=/var/lib/tomcat/fcrepo4-data"
-ENV JAVA_OPTS "${JAVA_OPTS} -Djava.io.tmpdir=tmp"
+ENV JAVA_OPTS "${JAVA_OPTS} -Djava.io.tmpdir=/tmp"
+
+#fcrepo.modeshape.configuration=<classpath:/config/repository.json | file:/path/to/repository.json>   $CATALINA_HOME/webapps/fcrepo/WEB-INF/classes/config/minimal-default/repository.json
+ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.modeshape.configuration=config/minimal-default/repository.json"
+
+#fcrepo.ispn.configuration=<config/infinispan.xml>    /usr/local/tomcat/webapps/fcrepo/WEB-INF/classes/config/infinispan/file/infinispan.xml
+ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.ispn.configuration=config/infinispan/file/infinispan.xml"
+
+
+# the following variables use the fcrepo.home as basepath if not set explicit
 ENV JAVA_OPTS "${JAVA_OPTS} -Dcom.arjuna.ats.arjuna.common.ObjectStoreEnvironmentBean.default.objectStoreDir=/var/lib/tomcat/fcrepo4-data/com.arjuna.ats.arjuna.common.ObjectStoreEnvironmentBean.default.objectStoreDir"
 ENV JAVA_OPTS "${JAVA_OPTS} -Dcom.arjuna.ats.arjuna.objectstore.objectStoreDir=/var/lib/tomcat/fcrepo4-data/com.arjuna.ats.arjuna.objectstore.objectStoreDir"
 ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.ispn.CacheDirPath=/var/lib/tomcat/fcrepo4-data/fcrepo.ispn.cache"
@@ -39,8 +45,8 @@ ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.ispn.alternative.CacheDirPath=/var/lib/tomc
 ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.ispn.binary.alternative.CacheDirPath=/var/lib/tomcat/fcrepo4-data/fcrepo.ispn.binary.alternative.cache"
 
 
-
-
+#ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.ispn.repo.cache=/var/lib/tomcat/fcrepo4-data/fcrepo.ispn.repo.cache"
+#ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.activemq.directory=/var/lib/tomcat/fcrepo4-data/fcrepo.activemq.directory"
 
 # ---------------------
 #
