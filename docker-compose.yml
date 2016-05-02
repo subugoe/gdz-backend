@@ -24,12 +24,12 @@ services:
       - "9080:9080"
     volumes:
       - ./data/fcrepo/:/var/lib/tomcat/fcrepo4-data  # todo data dir (storage)
-      #- /var/lib/tomcat/fcrepo4-data  # todo data dir (storage)
     links:
       - redis
       - solr
       - fuseki
     #user: "root"
+
 
   # builds the fcrepo repo war, which can be reused from the fcrepo service
   # the idea behind this service is to separate the build and runtime environment
