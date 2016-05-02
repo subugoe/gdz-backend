@@ -7,13 +7,15 @@ services:
   #     Fedora (...:8080/fcrepo)
   #     Apache Karaf, Apache Camel
   fcrepo:
-    build: docker/fcrepo/
+    #build: docker/fcrepo/                    # on linux based hosts
+    build:                                    # on mac osx based host
+      context: ./docker/fcrepo
+      dockerfile: Dockerfile
     working_dir: /usr/local/tomcat
     container_name: fcrepo
     restart: always
     #command: sleep 6000
     depends_on:
-      #- fcrepo_build
       - fuseki
       - solr
       - redis
@@ -84,7 +86,10 @@ services:
 
 
   web:
-    build: .
+    #build: docker/web/
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
     command: bundle exec passenger start --port 3000
     container_name: web
     restart: always
@@ -99,10 +104,15 @@ services:
 
   # for optimization start more then one instance of the node running the background processing (via docker swarm or kubernetes)
   worker:
-    build: .
+    #build: docker/web/
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
     command: bundle exec sidekiq -q mets,8 -q collection,5 -q fileset,5
     # container_name: worker    # you cannot scale a service beyond 1 container if you have specified a custom name (container names must be unique)
     restart: always
+    depends_on:
+      - web
     links:
       - redis:redis
       - fcrepo:fcrepo
