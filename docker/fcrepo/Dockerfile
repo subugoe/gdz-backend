@@ -156,13 +156,12 @@ RUN chown -R $FCREPO_UID:$FCREPO_UID bin webapps temp logs work conf
 
 
 
-USER $FCREPO
-#USER $FCREPO_USER:$FCREPO_USER
+USER $FCREPO_UID
+#USER $FCREPO_UID:$FCREPO_UID
 
 #CMD [ "sh", "/fcrepo_config/runall.sh"]
 CMD ["catalina.sh", "run"]
 
 
 #COPY entrypoint.sh entrypoint.sh
-#COPY scripts/tomcat-users.xml tomcat-users.xml
 #ENTRYPOINT ["sh", "entrypoint.sh"]
