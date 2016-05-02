@@ -121,6 +121,14 @@ services:
     #ports:
       #  - "3001"
 
+#  fcrepo4-docker:
+#    image: yinlinchen/fcrepo4-docker:4.5.0
+#    ports:
+#      - "8080:8080"
+#      - "9080:9080"
+#    volumes:
+#      - /Users/jpanzer/tmp/:/usr/local/tomcat7/fcrepo4-data
+      #- /tmp/data:/usr/local/tomcat7/fcrepo4-data
 
 #worker_2:
 #  build: .
