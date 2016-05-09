@@ -86,17 +86,7 @@ RUN chown -R $FCREPO_UID:$FCREPO_UID bin webapps temp logs work conf
 
 #RUN mkdir -p /usr/local/tomcat/conf/Catalina/localhost
 #RUN chmod -R 777 /usr/local/tomcat/conf/Catalina
-
 #RUN chown -R $FCREPO_UID:$FCREPO_UID /usr/local/tomcat/conf/Catalina
-
-
-
-
-
-
-
-
-
 
 
 
@@ -105,9 +95,9 @@ RUN chown -R $FCREPO_UID:$FCREPO_UID bin webapps temp logs work conf
 # install maven
 
 
-#RUN curl -fsSL http://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz | tar xzf - -C /usr/share
-#RUN mv /usr/share/apache-maven-$MAVEN_VERSION /usr/share/maven
-#RUN ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
+RUN curl -fsSL http://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz | tar xzf - -C /usr/share
+RUN mv /usr/share/apache-maven-$MAVEN_VERSION /usr/share/maven
+RUN ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
 
 
 
@@ -117,16 +107,17 @@ RUN chown -R $FCREPO_UID:$FCREPO_UID bin webapps temp logs work conf
 # Install Apache Karaf   (see: https://hub.docker.com/r/yinlinchen/fcrepo4-docker/)
 
 
-#RUN cd /tmp \
-#	&& curl -fSL http://mirror.csclub.uwaterloo.ca/apache/karaf/$KARAF_VERSION/apache-karaf-$KARAF_VERSION.tar.gz -o apache-karaf-$KARAF_VERSION.tar.gz \
-#	&& tar -xzf apache-karaf-$KARAF_VERSION.tar.gz \
-#	&& mv /tmp/apache-karaf-$KARAF_VERSION /opt \
-#	&& ln -s /opt/apache-karaf-$KARAF_VERSION /opt/karaf \
-#	&& rm apache-karaf-$KARAF_VERSION.tar.gz*
+RUN cd /tmp \
+ && curl -fSL http://artfiles.org/apache.org/karaf/$KARAF_VERSION/apache-karaf-$KARAF_VERSION.tar.gz -o apache-karaf-$KARAF_VERSION.tar.gz \
+ && tar -xzf apache-karaf-$KARAF_VERSION.tar.gz \
+ && ls -l /tmp \
+ && mv /tmp/apache-karaf-$KARAF_VERSION /opt \
+ && ln -s /opt/apache-karaf-$KARAF_VERSION /opt/karaf \
+ && rm apache-karaf-$KARAF_VERSION.tar.gz*
 
 
-#RUN chown -R $FCREPO_UID:$FCREPO_UID /opt/karaf
-#    && chown -R $FCREPO_UID:$FCREPO_UID /opt/apache-karaf-$KARAF_VERSION
+RUN chown -R $FCREPO_UID:$FCREPO_UID /opt/karaf
+RUN chown -R $FCREPO_UID:$FCREPO_UID /opt/apache-karaf-$KARAF_VERSION
 #    && chmod -R 750 /opt/karaf/etc \
 #    && chmod -R 750 /opt/apache-karaf-$KARAF_VERSION/etc
 
@@ -136,9 +127,9 @@ RUN chown -R $FCREPO_UID:$FCREPO_UID bin webapps temp logs work conf
 
 #---------------------
 # Fedora Camel Toolbox
-#COPY scripts/fedora_camel_toolbox.script /fcrepo_config/
-#COPY scripts/fedora_camel_toolbox.sh /fcrepo_config/
-#COPY scripts/runall.sh /fcrepo_config/
+COPY scripts/fedora_camel_toolbox.script /fcrepo_config/
+COPY scripts/fedora_camel_toolbox.sh /fcrepo_config/
+COPY scripts/runall.sh /fcrepo_config/
 
 
 
@@ -148,11 +139,11 @@ RUN chown -R $FCREPO_UID:$FCREPO_UID bin webapps temp logs work conf
 
 
 
-USER $FCREPO_UID
-#USER $FCREPO_UID:$FCREPO_UID
 
-#CMD [ "sh", "/fcrepo_config/runall.sh"]
-CMD ["catalina.sh", "run"]
+USER $FCREPO_UID
+
+CMD [ "sh", "/fcrepo_config/runall.sh"]
+#CMD ["catalina.sh", "run"]
 
 
 #COPY entrypoint.sh entrypoint.sh
