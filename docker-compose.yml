@@ -69,21 +69,21 @@ services:
     restart: always
     ports:
       - "3030:3030"
-    #user: $UID
     volumes:
-      - ./data/fuseki/:/fuseki/databases/  # todo data dir (storage)
+      - ./data/fuseki/:/fuseki/ #databases/  # todo data dir (storage)
+    user: "1000"
 
 
   redis:
-    image: redis
+    image: redis:3.0
     command: redis-server --appendonly yes
     container_name: redis
     restart: always
     ports:
       - "6379:6379"
-    #volumes:   # todo data dir (storage)
-    # - ...
-
+    volumes:
+      - ./data/redis/:/data/  # todo data dir (storage)
+    user: "1000"
 
   web:
     #build: docker/web/
