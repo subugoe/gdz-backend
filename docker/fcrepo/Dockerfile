@@ -143,8 +143,3 @@ COPY scripts/runall.sh /fcrepo_config/
 USER $FCREPO_UID
 
 CMD [ "sh", "/fcrepo_config/runall.sh"]
-#CMD ["catalina.sh", "run"]
-
-
-#COPY entrypoint.sh entrypoint.sh
-#ENTRYPOINT ["sh", "entrypoint.sh"]
