@@ -1,25 +1,14 @@
 #!/bin/bash
 
 
-echo "---whoami --------------------------------"
-whoami
 
-echo "--- ls -l --------------------------------"
-ls -l $CATALINA_HOME/conf
-
-mv /usr/local/tomcat/tomcat-users.xml /usr/local/tomcat/conf/tomcat-users.xml
+#mv /usr/local/tomcat/tomcat-users.xml /usr/local/tomcat/conf/tomcat-users.xml
 
 
-echo "--- ps aux (1) --------------------------------"
-ps aux
 
-
-catalina.sh run &
+#catalina.sh run &
 #catalina.sh run > /dev/null 2>&1 &
 #/usr/local/tomcat/bin/catalina.sh run &
-
-echo "--- ps aux (2)  --------------------------------"
-ps aux
 
 
 

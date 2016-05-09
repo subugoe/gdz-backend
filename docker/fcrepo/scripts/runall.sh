@@ -16,3 +16,4 @@ sleep 90
 
 cd /usr/local/tomcat
 sh /usr/local/tomcat/bin/catalina.sh run
+#sh catalina.sh run
