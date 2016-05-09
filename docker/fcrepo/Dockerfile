@@ -79,14 +79,6 @@ RUN cp fcrepo.war /usr/local/tomcat/webapps/fcrepo.war
 RUN chown $FCREPO_UID /usr/local/tomcat/webapps/fcrepo.war
 
 
-#---------------------
-# Fedora Camel Toolbox
-#COPY scripts/fedora_camel_toolbox.script /fcrepo_config/
-#COPY scripts/fedora_camel_toolbox.sh /fcrepo_config/
-#COPY scripts/runall.sh /fcrepo_config/
-
-#-----------------------
-# build and add features
 WORKDIR /usr/local/tomcat
 RUN chown -R $FCREPO_UID:$FCREPO_UID bin webapps temp logs work conf
   #  #&& chmod -R 300 bin webapps temp logs work conf
