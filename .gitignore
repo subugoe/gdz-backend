@@ -22,6 +22,7 @@
 /fcrepo4-data/**
 /fcrepo4-data_/**
 /tmp_data/**
+/data/**
 .idea/
 .DS_Store
 *.iml
