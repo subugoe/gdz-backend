@@ -29,7 +29,7 @@ ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.home=/var/lib/tomcat/fcrepo4-data"
 ENV JAVA_OPTS "${JAVA_OPTS} -Djava.io.tmpdir=/tmp"
 
 #fcrepo.modeshape.configuration=<classpath:/config/repository.json | file:/path/to/repository.json>   $CATALINA_HOME/webapps/fcrepo/WEB-INF/classes/config/minimal-default/repository.json
-ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.modeshape.configuration=config/minimal-default/repository.json"
+ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.modeshape.configuration=classpath:/config/minimal-default/repository.json"
 
 #fcrepo.ispn.configuration=<config/infinispan.xml>    /usr/local/tomcat/webapps/fcrepo/WEB-INF/classes/config/infinispan/file/infinispan.xml
 ENV JAVA_OPTS "${JAVA_OPTS} -Dfcrepo.ispn.configuration=config/infinispan/file/infinispan.xml"
