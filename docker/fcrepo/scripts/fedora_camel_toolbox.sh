@@ -9,7 +9,6 @@
 /opt/karaf/bin/client -h 127.0.0.1 -v -l 4 -u karaf -h localhost -a 8101 -f "/fcrepo_config/fedora_camel_toolbox.script"
 
 
-sleep 5
 
 
 #--------------
@@ -26,7 +25,6 @@ sed -i 's|fcrepo.authUsername=$|fcrepo.authUsername=fedoraAdmin|' /opt/karaf/etc
 sed -i 's|fcrepo.authPassword=$|fcrepo.authPassword=secret3|' /opt/karaf/etc/org.fcrepo.camel.indexing.solr.cfg
 
 
-sleep 5
 
 
 #---------------------
@@ -44,7 +42,6 @@ sed -i 's|fcrepo.baseUrl=localhost:8080/fcrepo/rest|fcrepo.baseUrl=fcrepo:8080/f
 sed -i 's|triplestore.baseUrl=localhost:8080/fuseki/test/update|triplestore.baseUrl=fuseki:3030/fuseki|' /opt/karaf/etc/org.fcrepo.camel.indexing.triplestore.cfg   # todo possibly triplestore.baseUrl=fuseki:8080/fuseki/test/update
 
 
-sleep 5
 
 
 #--------------
@@ -60,7 +57,6 @@ sed -i 's|triplestore.baseUrl=localhost:8080/fuseki/test/update|triplestore.base
 sed -i 's|event.baseUri=http://example.com/event|event.baseUri=http://gdz.sub.uni-goettingen.de/fedora_event|' /opt/karaf/etc/org.fcrepo.camel.audit.cfg
 
 
-sleep 5
 
 
 #---------------
@@ -77,7 +73,6 @@ sed -i 's|fcrepo.authPassword=$|fcrepo.authPassword=secret3|' /opt/karaf/etc/org
 sed -i 's|fcrepo.baseUrl=localhost:8080/fcrepo/rest|fcrepo.baseUrl=fcrepo:8080/fcrepo/rest|' /opt/karaf/etc/org.fcrepo.camel.fixity.cfg
 
 
-sleep 5
 
 
 #----------------------
@@ -94,7 +89,6 @@ sed -i 's|fcrepo.authPassword=$|fcrepo.authPassword=secret3|' /opt/karaf/etc/org
 sed -i 's|fcrepo.baseUrl=localhost:8080/fcrepo/rest|fcrepo.baseUrl=fcrepo:8080/fcrepo/rest|' /opt/karaf/etc/org.fcrepo.camel.serialization.cfg
 
 
-sleep 5
 
 
 #-------------------
