@@ -23,7 +23,7 @@ services:
       - "8080:8080"
       - "9080:9080"
     volumes:
-      - ./data/fcrepo/:/var/lib/tomcat/fcrepo4-data  # todo data dir (storage)
+      - $FCREPO_STORAGE/fcrepo/:/var/lib/tomcat/fcrepo4-data  # todo data dir (storage)
     links:
       - redis
       - solr
@@ -58,7 +58,7 @@ services:
       SOLR_HOME: /opt/solr/
       JAVA_OPTS: "-server -Xms512M -Xmx1792M -XX:MaxPermSize=768M"
     volumes:   # todo data dir (storage)
-      - ./data/solr/:/opt/solr/gdz/data/
+      - $FCREPO_STORAGE/solr/:/opt/solr/gdz/data/
 
 
   #   Fuseki (...:3030/fuseki)
@@ -70,7 +70,7 @@ services:
     ports:
       - "3030:3030"
     volumes:
-      - ./data/fuseki/:/fuseki/ #databases/  # todo data dir (storage)
+      - $FCREPO_STORAGE/fuseki/:/fuseki/ #databases/  # todo data dir (storage)
     user: "1000"
 
 
@@ -82,7 +82,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - ./data/redis/:/data/  # todo data dir (storage)
+      - $FCREPO_STORAGE/redis/:/data/  # todo data dir (storage)
     user: "1000"
 
   web:
