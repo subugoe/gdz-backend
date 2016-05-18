@@ -16,9 +16,12 @@
 * begin import via: ruby ingest.rb
 
 ### with docker ###
-* docker-compose build
-* docker-compose up -d
-* docker-compose scale worker=5             # to start 4 additional worker instances (if required)
+* create an environment variable 'FCREPO_STORAE' pointing to the storage path
+    * export FCREPO_STORAGE=</path/to/storage>
+    * default is '/mnt/storage/' (see start.sh)
+* run the startscript: start.sh
+* to add more worker run the following cli command
+    * docker-compose scale worker=5             # to start 4 additional worker instances (if required)
 * check: docker ps
 
 * http://127.0.0.1                          # Blacklight
