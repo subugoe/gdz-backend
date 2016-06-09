@@ -17,7 +17,7 @@
 
 ### with docker ###
 * create an environment variable 'FCREPO_STORAE' pointing to the storage path
-    * export FCREPO_STORAGE=</path/to/storage>
+    * export FCREPO_STORAGE=/path/to/storage
     * default is '/mnt/storage/' (see start.sh)
 * create an environment variable  'RAILS_ENV' which modifies the container names
     * e.g.: export RAILS_ENV=development
