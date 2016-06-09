@@ -20,7 +20,7 @@ services:
       - solr
       - redis
     ports:
-      - "8080:8080"
+      - "8444:8080"
       - "9080:9080"
     volumes:
       - $FCREPO_STORAGE/fcrepo/:/var/lib/tomcat/fcrepo4-data  # todo data dir (storage)
@@ -41,7 +41,7 @@ services:
 #      - ./build/fcrepo/:/fcrepo/
 #    environment:
 #      FEDORA_VERSION: 4.5.0
-#    #user: docker:docker
+#    user: docker:docker
 
 
   #   Solr (...:8983/solr)
@@ -52,7 +52,7 @@ services:
     container_name: gdz-be-$RAILS_ENV-solr
     restart: always
     ports:
-      - "8983:8983"
+      - "8443:8983"
     environment:
       SOLR_VERSION: 5.5
       SOLR_HOME: /opt/solr/
@@ -67,11 +67,11 @@ services:
     image: stain/jena-fuseki
     container_name: gdz-be-$RAILS_ENV-fuseki
     restart: always
-    ports:
-      - "3030:3030"
+    #ports:
+    #  - "3030:3030"
     volumes:
       - $FCREPO_STORAGE/fuseki/:/fuseki/ #databases/  # todo data dir (storage)
-    #user: "1000"
+    user: "1000"
 
 
   redis:
@@ -79,11 +79,11 @@ services:
     command: redis-server --appendonly yes
     container_name: gdz-be-$RAILS_ENV-redis
     restart: always
-    ports:
-      - "6379:6379"
+    #ports:
+    #  - "6379:6379"
     volumes:
       - $FCREPO_STORAGE/redis/:/data/  # todo data dir (storage)
-    #user: "1000"
+    user: "1000"
 
   web:
     #build: docker/web/
@@ -99,7 +99,7 @@ services:
     volumes:
       - .:/web
     ports:
-      - "80:3000"
+      - "8442:3000"
 
 
   # for optimization start more then one instance of the node running the background processing (via docker swarm or kubernetes)
