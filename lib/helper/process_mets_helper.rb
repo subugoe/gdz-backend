@@ -8,7 +8,7 @@ class ProcessMetsHelper
   include GlobalHelper
 
   def initialize(ppn)
-    @s = Redis::Semaphore.new(:semaphore_name, :host => "redis")
+    @s = Redis::Semaphore.new(:mets_helper_setsemaphore, :host => "redis")
 
     @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG

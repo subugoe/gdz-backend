@@ -8,7 +8,7 @@ class ProcessMetsFileSetHelper
   include GlobalHelper
 
   def initialize(ppn, work_id)
-    @s            = Redis::Semaphore.new(:semaphore_name, :host => "redis")
+    @s            = Redis::Semaphore.new(:mets_file_set_semaphore, :host => "redis")
     @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
 
