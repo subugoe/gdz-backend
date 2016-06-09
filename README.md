@@ -19,6 +19,9 @@
 * create an environment variable 'FCREPO_STORAE' pointing to the storage path
     * export FCREPO_STORAGE=</path/to/storage>
     * default is '/mnt/storage/' (see start.sh)
+* create an environment variable  'RAILS_ENV' which modifies the container names
+    * e.g.: export RAILS_ENV=development
+    * if not set, '' will be used
 * run the startscript: start.sh
 * to add more worker run the following cli command
     * docker-compose scale worker=5             # to start 4 additional worker instances (if required)

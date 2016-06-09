@@ -12,7 +12,7 @@ services:
       context: ./docker/fcrepo
       dockerfile: Dockerfile
     working_dir: /usr/local/tomcat
-    container_name: fcrepo
+    container_name: gdz-be-$RAILS_ENV-fcrepo
     restart: always
     #command: sleep 6000
     depends_on:
@@ -35,13 +35,13 @@ services:
   # the idea behind this service is to separate the build and runtime environment
 #  fcrepo_build:
 #    build: docker/fcrepo_build/
-#    container_name: fcrepo_build
+#    container_name: gdz-be-$RAILS_ENV-fcrepo_build
 #    command: sleep 360
 #    volumes:
 #      - ./build/fcrepo/:/fcrepo/
 #    environment:
 #      FEDORA_VERSION: 4.5.0
-#    user: docker:docker
+#    #user: docker:docker
 
 
   #   Solr (...:8983/solr)
@@ -49,7 +49,7 @@ services:
   solr:
     #image: solr:5.5
     build: docker/solr/
-    container_name: solr
+    container_name: gdz-be-$RAILS_ENV-solr
     restart: always
     ports:
       - "8983:8983"
@@ -65,25 +65,25 @@ services:
   #   admin password will be generated on first start-up (see the logs)
   fuseki:
     image: stain/jena-fuseki
-    container_name: fuseki
+    container_name: gdz-be-$RAILS_ENV-fuseki
     restart: always
     ports:
       - "3030:3030"
     volumes:
       - $FCREPO_STORAGE/fuseki/:/fuseki/ #databases/  # todo data dir (storage)
-    user: "1000"
+    #user: "1000"
 
 
   redis:
     image: redis:3.0
     command: redis-server --appendonly yes
-    container_name: redis
+    container_name: gdz-be-$RAILS_ENV-redis
     restart: always
     ports:
       - "6379:6379"
     volumes:
       - $FCREPO_STORAGE/redis/:/data/  # todo data dir (storage)
-    user: "1000"
+    #user: "1000"
 
   web:
     #build: docker/web/
@@ -91,7 +91,7 @@ services:
       context: .
       dockerfile: docker/web/Dockerfile
     command: bundle exec passenger start --port 3000
-    container_name: web
+    container_name: gdz-be-$RAILS_ENV-web
     restart: always
     links:
       - redis:redis
@@ -103,7 +103,7 @@ services:
 
 
   # for optimization start more then one instance of the node running the background processing (via docker swarm or kubernetes)
-  worker:
+  gdz-be-worker:
     #build: docker/web/
     build:
       context: .
