@@ -21,7 +21,7 @@ services:
       - redis
     ports:
       - "8444:8080"
-      - "9080:9080"
+    #  - "9080:9080"
     volumes:
       - $FCREPO_STORAGE/fcrepo/:/var/lib/tomcat/fcrepo4-data  # todo data dir (storage)
     links:
@@ -108,7 +108,7 @@ services:
     build:
       context: .
       dockerfile: docker/web/Dockerfile
-    command: bundle exec sidekiq -q mets,8 -q collection,5 -q fileset,5
+    command: bundle exec sidekiq -q mets,3 -q collection,2 -q fileset,5 -q metsfileset,8 -q biblfileset,8 -q pagefileset, 8
     # container_name: worker    # you cannot scale a service beyond 1 container if you have specified a custom name (container names must be unique)
     restart: always
     depends_on:
