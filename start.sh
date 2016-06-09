@@ -3,7 +3,7 @@
 
 # --- storage
 
-if [ -z ${FCREPO_STORAGE} ]; then export FCREPO_STORAGE=./data; fi
+if [ -z ${FCREPO_STORAGE} ]; then export FCREPO_STORAGE=/mnt/storage; fi
 
 mkdir -p $FCREPO_STORAGE/fcrepo
 mkdir -p $FCREPO_STORAGE/solr
@@ -16,9 +16,9 @@ chmod -R 744 $FCREPO_STORAGE
 
 unamestr=`uname`
 if [[ "$unamestr" == "Darwin"* ]]; then
-        sed -i.bak "s|    user: |    #user: |" docker-compose.yml
+        sed -i.bak "s/^    user: /    #user: /" docker-compose.yml
 else
-        sed -i "s|    user: |    #user: |" docker-compose.yml
+        sed -i "s/^    user: /    #user: /" docker-compose.yml
 fi
 
 
