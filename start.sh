@@ -16,7 +16,8 @@ chmod -R 744 $FCREPO_STORAGE
 
 unamestr=`uname`
 if [[ "$unamestr" == "Darwin"* ]]; then
-        sed -i.bak "s/^    user: /    #user: /" docker-compose.yml
+        # sed -i.bak "s/^    user: /    #user: /" docker-compose.yml
+        echo "Darwin"
 else
         sed -i "s/^    user: /    #user: /" docker-compose.yml
 fi
