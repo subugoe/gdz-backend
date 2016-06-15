@@ -7,14 +7,12 @@ services:
   #     Fedora (...:8080/fcrepo)
   #     Apache Karaf, Apache Camel
   fcrepo:
-    #build: docker/fcrepo/                    # on linux based hosts
     build:                                    # on mac osx based host
       context: ./docker/fcrepo
       dockerfile: Dockerfile
     working_dir: /usr/local/tomcat
     container_name: gdz-be-$RAILS_ENV-fcrepo
     restart: always
-    #command: sleep 6000
     depends_on:
       - fuseki
       - solr
@@ -23,25 +21,13 @@ services:
       - "8444:8080"
     #  - "9080:9080"
     volumes:
-      - $FCREPO_STORAGE/fcrepo/:/var/lib/tomcat/fcrepo4-data  # todo data dir (storage)
+      - $FCREPO_STORAGE/fcrepo/:/var/lib/tomcat/fcrepo4-data
     links:
       - redis
       - solr
       - fuseki
-    #user: "root"
-
-
-  # builds the fcrepo repo war, which can be reused from the fcrepo service
-  # the idea behind this service is to separate the build and runtime environment
-#  fcrepo_build:
-#    build: docker/fcrepo_build/
-#    container_name: gdz-be-$RAILS_ENV-fcrepo_build
-#    command: sleep 360
-#    volumes:
-#      - ./build/fcrepo/:/fcrepo/
-#    environment:
-#      FEDORA_VERSION: 4.5.0
-#    user: docker:docker
+    user: "10021" 
+    mem_limit: 2GB
 
 
   #   Solr (...:8983/solr)
@@ -57,50 +43,60 @@ services:
       SOLR_VERSION: 5.5
       SOLR_HOME: /opt/solr/
       JAVA_OPTS: "-server -Xms512M -Xmx1792M -XX:MaxPermSize=768M"
-    volumes:   # todo data dir (storage)
+    volumes:
       - $FCREPO_STORAGE/solr/:/opt/solr/gdz/data/
+    mem_limit: 2GB
+    user: "10021"
 
 
   #   Fuseki (...:3030/fuseki)
   #   admin password will be generated on first start-up (see the logs)
   fuseki:
     image: stain/jena-fuseki
+    #build: docker/fuseki/
     container_name: gdz-be-$RAILS_ENV-fuseki
     restart: always
     #ports:
     #  - "3030:3030"
     volumes:
-      - $FCREPO_STORAGE/fuseki/:/fuseki/ #databases/  # todo data dir (storage)
-    user: "1000"
+      - $FCREPO_STORAGE/fuseki/:/fuseki/ #databases/ 
+    #user: "10021"  # todo 
 
 
   redis:
-    image: redis:3.0
+    build: docker/redis/
+    #image: redis:3.0
     command: redis-server --appendonly yes
     container_name: gdz-be-$RAILS_ENV-redis
     restart: always
     #ports:
     #  - "6379:6379"
     volumes:
-      - $FCREPO_STORAGE/redis/:/data/  # todo data dir (storage)
-    user: "1000"
+      - $FCREPO_STORAGE/redis/:/data/
+    #user: "10021"
+    mem_limit: 1GB
+
 
   web:
     #build: docker/web/
     build:
       context: .
       dockerfile: docker/web/Dockerfile
-    command: bundle exec passenger start --port 3000
+    command: bundle exec passenger start -e development --port 3000 #  --user=10021
     container_name: gdz-be-$RAILS_ENV-web
     restart: always
     links:
       - redis:redis
       - fcrepo:fcrepo
     volumes:
-      - .:/web
+      - .:/home/web
+
     ports:
       - "8442:3000"
-
+    environment:
+      - RAILS_ENV=development
+    #user: "10021"
+    mem_limit: 1GB
 
   # for optimization start more then one instance of the node running the background processing (via docker swarm or kubernetes)
   gdz-be-worker:
@@ -118,9 +114,11 @@ services:
       - fcrepo:fcrepo
     volumes:
       - .:/web
+    mem_limit: 2GB
     #ports:
       #  - "3001"
-
+    user: "10021"
+ 
 #  fcrepo4-docker:
 #    image: yinlinchen/fcrepo4-docker:4.5.0
 #    ports:
@@ -129,50 +127,6 @@ services:
 #    volumes:
 #      - /Users/jpanzer/tmp/:/usr/local/tomcat7/fcrepo4-data
       #- /tmp/data:/usr/local/tomcat7/fcrepo4-data
-
-#worker_2:
-#  build: .
-#  command: bundle exec sidekiq -q mets,8 -q collection,5 -q fileset,5
-#  container_name: worker_2
-#  restart: always
-#  links:
-#    - redis:redis
-#    - fcrepo:fcrepo
-#  volumes:
-#    - .:/web
-#
-#worker_3:
-#  build: .
-#  command: bundle exec sidekiq -q mets,8 -q collection,5 -q fileset,5
-#  container_name: worker_3
-#  restart: always
-#  links:
-#    - redis:redis
-#    - fcrepo:fcrepo
-#  volumes:
-#    - .:/web
-#
-#worker_4:
-#  build: .
-#  command: bundle exec sidekiq -q mets,8 -q collection,5 -q fileset,5
-#  container_name: worker_4
-#  restart: always
-#  links:
-#    - redis:redis
-#    - fcrepo:fcrepo
-#  volumes:
-#    - .:/web
-#
-#worker_5:
-#  build: .
-#  command: bundle exec sidekiq -q mets,8 -q collection,5 -q fileset,5
-#  container_name: worker_5
-#  restart: always
-#  links:
-#    - redis:redis
-#    - fcrepo:fcrepo
-#  volumes:
-#    - .:/web
 
 
 #storage:
@@ -189,7 +143,3 @@ services:
 #    - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
 #  ports:
 #    - "80:80"
-
-#nginx:
-#  image: nginx
-#  ports: 80:80

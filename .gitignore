@@ -12,8 +12,9 @@
 /db/*.sqlite3-journal
 
 # Ignore all logfiles and tempfiles.
-/log/*
+/log/**
 !/log/.keep
+log/*
 /tmp
 
 
@@ -26,3 +27,7 @@
 .idea/
 .DS_Store
 *.iml
+.passenger/**
+passenger.3000.pid
+passenger.3000.pid.lock
+

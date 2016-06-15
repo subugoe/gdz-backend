@@ -15,14 +15,14 @@
 
 
 # ideally:
-FROM alpine:3.3
-RUN apk add --update openjdk8-jre pwgen bash && rm -rf /var/cache/apk/*
+#FROM alpine:3.3
+#RUN apk add --update openjdk8-jre pwgen bash && rm -rf /var/cache/apk/*
 # alternatively:
-#FROM anapsix/alpine-java:jre8
-#RUN apk add --update pwgen && rm -rf /var/cache/apk/*
+FROM anapsix/alpine-java:jre8
 
 MAINTAINER Stian Soiland-Reyes <stain@apache.org>
 
+RUN apk add --update pwgen && rm -rf /var/cache/apk/*
 
 
 # Update below according to https://jena.apache.org/download/
@@ -37,13 +37,14 @@ VOLUME /fuseki
 ENV FUSEKI_BASE /fuseki
 
 
-# 999(docker)
-ENV FUSEKI_USER docker
-ENV FUSEKI_UID 1000
+ENV EFFECTIVE_UID=10021
+ENV EFFECTIVE_GID=999
 
 
-#RUN groupadd -r $FUSEKI_USER  && \
-##  useradd -r -u $FUSEKI_UID  $FUSEKI_USER
+RUN adduser -u $EFFECTIVE_UID -S  fuseki
+#RUN addgroup  -g $EFFECTIVE_GID -S  fuseki 
+
+RUN  id fuseki
 
 
 # Installation folder
@@ -76,14 +77,13 @@ RUN chmod 755 /jena-fuseki/load.sh /jena-fuseki/tdbloader
 #VOLUME /staging
 
 
-
-/fuseki/databases/
-RUN chown -R $FUSEKI_UID /opt/solr
+RUN chown -R fuseki /fuseki/
+#databases/
 
 
 # Where we start our server from
 WORKDIR /jena-fuseki
 EXPOSE 3030
 ENTRYPOINT ["/docker-entrypoint.sh"]
-USER $FUSEKI_UID
+USER fuseki
 CMD ["/jena-fuseki/fuseki-server"]

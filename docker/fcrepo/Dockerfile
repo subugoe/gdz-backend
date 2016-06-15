@@ -9,9 +9,12 @@ ENV FEDORA_VERSION 4.5.0
 ENV FEDORA_TAG 4.5.0
 
 
+ENV EFFECTIVE_UID=10021
+ENV EFFECTIVE_GID=999
 
-ENV FCREPO_USER docker
-ENV FCREPO_UID 1000
+RUN groupadd -r -g $EFFECTIVE_GID fcrepo && \
+  useradd -r -u $EFFECTIVE_UID -g $EFFECTIVE_GID fcrepo
+
 
 ENV KARAF_VERSION 4.0.5
 ENV KARAF_HOME  /opt/karaf
@@ -73,21 +76,22 @@ WORKDIR /tmp
 RUN curl -fSL https://github.com/fcrepo4/fcrepo4/releases/download/fcrepo-$FEDORA_TAG/fcrepo-webapp-$FEDORA_VERSION.war -o fcrepo.war
 
 RUN mkdir -p /var/lib/tomcat/fcrepo4-data
-RUN chown -R $FCREPO_UID /var/lib/tomcat/fcrepo4-data
+RUN chown -R fcrepo:fcrepo /var/lib/tomcat/fcrepo4-data
+
 
 
 RUN cp fcrepo.war /usr/local/tomcat/webapps/fcrepo.war
-RUN chown $FCREPO_UID /usr/local/tomcat/webapps/fcrepo.war
+RUN chown fcrepo:fcrepo /usr/local/tomcat/webapps/fcrepo.war
 
 
 WORKDIR /usr/local/tomcat
-RUN chown -R $FCREPO_UID:$FCREPO_UID bin webapps temp logs work conf
+RUN chown -R fcrepo:fcrepo bin webapps temp logs work conf
   #  #&& chmod -R 300 bin webapps temp logs work conf
 
 
 #RUN mkdir -p /usr/local/tomcat/conf/Catalina/localhost
 #RUN chmod -R 777 /usr/local/tomcat/conf/Catalina
-#RUN chown -R $FCREPO_UID:$FCREPO_UID /usr/local/tomcat/conf/Catalina
+#RUN chown -R fcrepo:fcrepo /usr/local/tomcat/conf/Catalina
 
 
 
@@ -117,8 +121,8 @@ RUN cd /tmp \
  && rm apache-karaf-$KARAF_VERSION.tar.gz*
 
 
-RUN chown -R $FCREPO_UID:$FCREPO_UID /opt/karaf
-RUN chown -R $FCREPO_UID:$FCREPO_UID /opt/apache-karaf-$KARAF_VERSION
+RUN chown -R fcrepo:fcrepo /opt/karaf
+RUN chown -R fcrepo:fcrepo /opt/apache-karaf-$KARAF_VERSION
 #    && chmod -R 750 /opt/karaf/etc \
 #    && chmod -R 750 /opt/apache-karaf-$KARAF_VERSION/etc
 
@@ -141,6 +145,7 @@ COPY scripts/runall.sh /fcrepo_config/
 
 
 
-USER $FCREPO_UID
+USER fcrepo
+
 
 CMD [ "sh", "/fcrepo_config/runall.sh"]

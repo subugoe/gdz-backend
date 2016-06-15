@@ -5,15 +5,12 @@ RUN apt-get update && \
   apt-get -y install  lsof  vim && \
     rm -rf /var/lib/apt/lists/*
 
-# todo (@natalie) tomcat is running under root
 
-# 999(docker)
-ENV SOLR_USER docker
-ENV SOLR_UID 1000
+ENV EFFECTIVE_UID=10021
+ENV EFFECTIVE_GID=999
 
-
-#RUN groupadd -r $SOLR_USER  && \
-##  useradd -r -u $SOLR_UID $SOLR_USER
+RUN groupadd -r -g $EFFECTIVE_GID solr && \
+  useradd -r -u $EFFECTIVE_UID -g $EFFECTIVE_GID solr
 
 
 ENV SOLR_KEY 2C72EB1397733A551DDB60CCF119941F6E68DA61
@@ -43,9 +40,8 @@ COPY  config/sub/mapping-ISOLatin1Accent.txt /opt/solr/gdz/conf/mapping-ISOLatin
 COPY  config/schema.xml /opt/solr/gdz/conf/schema.xml
 COPY  config/solrconfig.xml /opt/solr/gdz/conf/solrconfig.xml
 
-RUN chown -R $SOLR_UID /opt/solr
+RUN chown -R solr:solr /opt/solr
 
-#EXPOSE 8983
 WORKDIR /opt/solr
-USER $SOLR_UID
+USER solr
 CMD ["/opt/solr/bin/solr", "-f"]
