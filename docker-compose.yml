@@ -1,5 +1,4 @@
-version: '2'
-
+version: '2.0'
 services:
 
   #   see: https://hub.docker.com/r/yinlinchen/fcrepo4-docker/
@@ -16,37 +15,33 @@ services:
     depends_on:
       - fuseki
       - solr
-      - redis
     ports:
-      - "8444:8080"
-    #  - "9080:9080"
+      - "$FCREPO_EXTERNAL_PORT:8080"
     volumes:
       - $FCREPO_STORAGE/fcrepo/:/var/lib/tomcat/fcrepo4-data
     links:
-      - redis
       - solr
       - fuseki
-    user: "10021" 
+    user: $USER_UID
     mem_limit: 2GB
+    env_file: 
+      - .env
 
 
-  #   Solr (...:8983/solr)
-  #   based on: https://github.com/docker-solr/docker-solr/blob/2e1ccd64970c65e7dacfe33203963b315f665cc3/5.5/Dockerfile
+  #   Solr (...:8983/solr) #   based on: https://github.com/docker-solr/docker-solr/blob/2e1ccd64970c65e7dacfe33203963b315f665cc3/5.5/Dockerfile
   solr:
     #image: solr:5.5
     build: docker/solr/
     container_name: gdz-be-$RAILS_ENV-solr
     restart: always
     ports:
-      - "8443:8983"
-    environment:
-      SOLR_VERSION: 5.5
-      SOLR_HOME: /opt/solr/
-      JAVA_OPTS: "-server -Xms512M -Xmx1792M -XX:MaxPermSize=768M"
+      - "$SOLR_EXTERNAL_PORT:8983"
     volumes:
       - $FCREPO_STORAGE/solr/:/opt/solr/gdz/data/
     mem_limit: 2GB
-    user: "10021"
+    user: $USER_UID
+    env_file: 
+      - .env
 
 
   #   Fuseki (...:3030/fuseki)
@@ -60,7 +55,9 @@ services:
     #  - "3030:3030"
     volumes:
       - $FCREPO_STORAGE/fuseki/:/fuseki/ #databases/ 
-    #user: "10021"  # todo 
+    #user: $USER_UID
+    env_file: 
+      - .env
 
 
   redis:
@@ -73,8 +70,10 @@ services:
     #  - "6379:6379"
     volumes:
       - $FCREPO_STORAGE/redis/:/data/
-    #user: "10021"
+    #user: $USER_UID
     mem_limit: 1GB
+    env_file: 
+      - .env
 
 
   web:
@@ -90,13 +89,14 @@ services:
       - fcrepo:fcrepo
     volumes:
       - .:/home/web
-
+      - $GDZ_DATA/:/gdzdata/:ro
     ports:
-      - "8442:3000"
-    environment:
-      - RAILS_ENV=development
-    #user: "10021"
+      - "$WEB_EXTERNAL_PORT:3000"
+    #user: $USER_UID
     mem_limit: 1GB
+    env_file: 
+      - .env
+
 
   # for optimization start more then one instance of the node running the background processing (via docker swarm or kubernetes)
   gdz-be-worker:
@@ -114,19 +114,14 @@ services:
       - fcrepo:fcrepo
     volumes:
       - .:/web
+      - $GDZ_DATA/:/gdzdata/:ro
     mem_limit: 2GB
     #ports:
       #  - "3001"
-    user: "10021"
- 
-#  fcrepo4-docker:
-#    image: yinlinchen/fcrepo4-docker:4.5.0
-#    ports:
-#      - "8080:8080"
-#      - "9080:9080"
-#    volumes:
-#      - /Users/jpanzer/tmp/:/usr/local/tomcat7/fcrepo4-data
-      #- /tmp/data:/usr/local/tomcat7/fcrepo4-data
+    user: $USER_UID
+    env_file: 
+      - .env
+
 
 
 #storage:
