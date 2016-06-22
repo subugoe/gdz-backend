@@ -1,6 +1,6 @@
 development:
   adapter: solr
-  url: http://solr:<%= ENV['SOLR_PORT'] || 8983 %>/solr/gdz-dev
+  url: http://solr:<%= ENV['SOLR_PORT'] || 8983 %>/solr/gdz
 test: &test
   adapter: solr
   url: http://solr:<%= ENV['SOLR_PORT'] || 8983 %>/solr/gdz-test
