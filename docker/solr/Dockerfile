@@ -6,18 +6,19 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 
-ENV EFFECTIVE_UID=10021
-ENV EFFECTIVE_GID=999
+ENV USER_UID=10021
+ENV USER_GID=999
 
-RUN groupadd -r -g $EFFECTIVE_GID solr && \
-  useradd -r -u $EFFECTIVE_UID -g $EFFECTIVE_GID solr
-
+RUN groupadd -r -g $USER_GID solr && \
+  useradd -r -u $USER_UID -g $USER_GID solr
 
 ENV SOLR_KEY 2C72EB1397733A551DDB60CCF119941F6E68DA61
 RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$SOLR_KEY"
 
 ENV SOLR_VERSION 5.5.0
 ENV SOLR_SHA256 c5fa5cb996fe1432e09bb2f6053ffbeb095436db4a77e9c6488b531db726b04d
+ 
+ENV SOLR_HOME /opt/solr/
 
 RUN mkdir -p /opt/solr/gdz/data
 RUN wget -nv --output-document=/opt/solr.tgz http://archive.apache.org/dist/lucene/solr/$SOLR_VERSION/solr-$SOLR_VERSION.tgz

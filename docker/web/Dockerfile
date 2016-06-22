@@ -2,11 +2,11 @@ FROM rails:4.2
 
 RUN apt-get update && apt-get install -y netcat
 
-ENV EFFECTIVE_UID=10021
-ENV EFFECTIVE_GID=999
+ENV USER_UID=10021
+ENV USER_GID=999
 
-RUN groupadd -r -g $EFFECTIVE_GID web && \
-  useradd -r -u $EFFECTIVE_UID -g $EFFECTIVE_GID web
+RUN groupadd -r -g $USER_GID web && \
+  useradd -r -u $USER_UID -g $USER_GID web
 
 RUN mkdir /home/web
 WORKDIR /home/web
@@ -18,6 +18,6 @@ RUN bundle install
 
 ADD . /home/web
 
-RUN RAILS_ENV=development rake db:migrate
+RUN rake db:migrate
 
 USER web

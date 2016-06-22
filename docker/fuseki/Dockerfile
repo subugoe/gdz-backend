@@ -37,14 +37,12 @@ VOLUME /fuseki
 ENV FUSEKI_BASE /fuseki
 
 
-ENV EFFECTIVE_UID=10021
-ENV EFFECTIVE_GID=999
+ENV USER_UID=10021
+ENV USER_GID=999
 
 
-RUN adduser -u $EFFECTIVE_UID -S  fuseki
-#RUN addgroup  -g $EFFECTIVE_GID -S  fuseki 
-
-RUN  id fuseki
+RUN adduser -u $USER_UID -S  fuseki
+#RUN addgroup  -g $USER_GID -S  fuseki 
 
 
 # Installation folder

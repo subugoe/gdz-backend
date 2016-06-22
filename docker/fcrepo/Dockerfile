@@ -4,22 +4,22 @@ FROM tomcat:8.0-jre8
 MAINTAINER  Jörg Panzer, SUB
 
 
-
 ENV FEDORA_VERSION 4.5.0
 ENV FEDORA_TAG 4.5.0
+ENV FCREPO_DOMAIN=134.76.20.169
 
 
-ENV EFFECTIVE_UID=10021
-ENV EFFECTIVE_GID=999
+ENV USER_UID=10021
+ENV USER_GID=999
 
-RUN groupadd -r -g $EFFECTIVE_GID fcrepo && \
-  useradd -r -u $EFFECTIVE_UID -g $EFFECTIVE_GID fcrepo
+RUN groupadd -r -g $USER_GID fcrepo && \
+  useradd -r -u $USER_UID -g $USER_GID fcrepo
 
 
 ENV KARAF_VERSION 4.0.5
 ENV KARAF_HOME  /opt/karaf
 
-ENV MAVEN_OPTS  "-Xmx1024m" -XX:MaxMetaspaceSize=1024m"
+ENV MAVEN_OPTS  "-Xmx1024m -XX:MaxMetaspaceSize=1024m"
 ENV MAVEN_VERSION 3.3.9
 ENV MAVEN_HOME /usr/share/maven
 ENV PATH "$PATH:$MAVEN_HOME/bin"
